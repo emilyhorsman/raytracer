@@ -1,4 +1,4 @@
-OBJECT_DEPS=main.o Scene.o Objects.o Vector.o
+OBJECT_DEPS=main.o Scene.o Objects.o Vector.o Camera.o
 
 # Linux (default)
 LDFLAGS=-lGL -lGLU -lglut
