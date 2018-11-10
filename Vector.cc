@@ -22,11 +22,29 @@ Vec3f add(Vec3f u, Vec3f v) {
 }
 
 
+Vec3f add(Vec3f v, float k) {
+    Vec3f output;
+    output[0] = v[0] + k;
+    output[1] = v[1] + k;
+    output[2] = v[2] + k;
+    return output;
+}
+
+
 Vec3f subtract(Vec3f u, Vec3f v) {
     Vec3f output;
     output[0] = u[0] - v[0];
     output[1] = u[1] - v[1];
     output[2] = u[2] - v[2];
+    return output;
+}
+
+
+Vec3f subtract(Vec3f v, float k) {
+    Vec3f output;
+    output[0] = v[0] - k;
+    output[1] = v[1] - k;
+    output[2] = v[2] - k;
     return output;
 }
 

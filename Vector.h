@@ -16,7 +16,13 @@ Vec3f crossProduct(Vec3f u, Vec3f v);
 Vec3f add(Vec3f u, Vec3f v);
 
 
+Vec3f add(Vec3f v, float k);
+
+
 Vec3f subtract(Vec3f u, Vec3f v);
+
+
+Vec3f subtract(Vec3f v, float k);
 
 
 float norm(Vec3f v);

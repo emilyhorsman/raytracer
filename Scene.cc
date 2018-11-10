@@ -20,6 +20,9 @@
 #include "Vector.h"
 
 
+Vec3f lightPosition({ 1, 1, -1 });
+
+
 Scene::Scene(int width, int height)
 : mObjects()
 , mCamera()
@@ -28,7 +31,7 @@ Scene::Scene(int width, int height)
 {
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({0, 0, 1}),
+            Vec3f({0, 0, -1}),
             0.5f
         )
     );
@@ -67,7 +70,9 @@ void Scene::render() {
 
 Vec3f Scene::trace(Vec3f ray) {
     for (auto obj : mObjects) {
-        if (obj->intersect(Vec3f({0, 0, 0}), ray)) {
+        Vec3f intersection;
+        Vec3f normal;
+        if (obj->intersect(Vec3f({0, 0, 0}), ray, intersection, normal)) {
             return Vec3f({0.3, 0.3, 0.3});
         }
     }
