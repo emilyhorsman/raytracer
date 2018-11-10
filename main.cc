@@ -10,27 +10,20 @@
 #include "Scene.h"
 
 
-Scene scene(6, 4);
+#define CANVAS_WIDTH 600
+#define CANVAS_HEIGHT 400
+
+
+Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
 
 
 void handleDisplay() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glLoadIdentity();
-    gluLookAt(
-        1, 1, 0,
-        0, 0, 0,
-        0, 1, 0
-    );
 
-    glBegin(GL_LINES);
-        glColor3f(0, 0, 1);
-        glVertex3f(0, 0, -2);
-        glColor3f(0, 1, 0);
-        glVertex3f(0, 0, 2);
-        glColor3f(1, 0, 0);
+    glBegin(GL_POINTS);
         scene.render();
-        glutWireCube(0.5);
     glEnd();
 
     glFlush();
@@ -41,10 +34,27 @@ void handleDisplay() {
 void handleReshape(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45, (float) w / (float) h, 0.01f, 100);
+
+    // Center the statically-sized canvas within the window. Essentially we're
+    // computing the correct margin between the sides of the window and when
+    // (0,0) to (canvasWidth, canvasHeight) is centered.
+    float centeringMarginX = (float) (w - CANVAS_WIDTH) / 2.0f;
+    float centeringMarginY = (float) (h - CANVAS_HEIGHT) / 2.0f;
+    gluOrtho2D(
+        -centeringMarginX,
+        w - centeringMarginX,
+        -centeringMarginY,
+        h - centeringMarginY
+    );
 
     glMatrixMode(GL_MODELVIEW);
-    glViewport(0, 0, w, h);
+}
+
+
+void handleKeyboard(unsigned char key, int _x, int _y) {
+    if (key == 'q' || key == 'Q') {
+        exit(0);
+    }
 }
 
 
@@ -55,6 +65,7 @@ int main(int argc, char **argv) {
     glutCreateWindow("Raytracer");
 
     glutDisplayFunc(handleDisplay);
+    glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
 
     glutMainLoop();

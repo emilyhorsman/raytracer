@@ -15,8 +15,11 @@ class Scene {
         int mWidth;
         int mHeight;
 
+        Vec3f trace(Vec3f ray);
+
     public:
         Scene(int width, int height);
+        ~Scene();
         void render();
 };
 

@@ -35,6 +35,10 @@ Scene::Scene(int width, int height)
 }
 
 
+Scene::~Scene() {
+}
+
+
 void Scene::render() {
     float aspectRatio = mWidth / mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
@@ -53,8 +57,14 @@ void Scene::render() {
 
             Vec3f ray = normalize(Vec3f({ pixelX, pixelY, -1 }));
 
-            glVertex3f(0, 0, 0);
-            glVertex3f(REST(ray));
+            Vec3f color = trace(ray);
+            glColor3f(REST(color));
+            glVertex3f(x, y, 0);
         }
     }
+}
+
+
+Vec3f Scene::trace(Vec3f ray) {
+    return Vec3f({ 1, 1, 1 });
 }
