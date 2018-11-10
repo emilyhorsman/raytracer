@@ -8,6 +8,8 @@ class SceneObject {
     public:
         SceneObject();
         virtual ~SceneObject() = default;
+
+        virtual bool intersect(Vec3f rayOrigin, Vec3f rayDirection) = 0;
 };
 
 
@@ -18,6 +20,7 @@ class Sphere: public SceneObject {
 
     public:
         Sphere(Vec3f origin, float radius);
+        bool intersect(Vec3f rayOrigin, Vec3f rayDirection);
 };
 
 

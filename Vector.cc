@@ -32,11 +32,7 @@ Vec3f subtract(Vec3f u, Vec3f v) {
 
 
 float norm(Vec3f v) {
-    return sqrt(
-        v[0] * v[0] +
-        v[1] * v[1] +
-        v[2] * v[2]
-    );
+    return sqrt(dot(v, v));
 }
 
 
@@ -60,4 +56,9 @@ Vec3f divide(Vec3f v, float denominator) {
     output[1] = v[1] / denominator;
     output[2] = v[2] / denominator;
     return output;
+}
+
+
+float dot(Vec3f u, Vec3f v) {
+    return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }

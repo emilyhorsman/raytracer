@@ -28,8 +28,8 @@ Scene::Scene(int width, int height)
 {
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({0, 0, 0}),
-            0.05f
+            Vec3f({0, 0, 1}),
+            0.5f
         )
     );
 }
@@ -66,5 +66,10 @@ void Scene::render() {
 
 
 Vec3f Scene::trace(Vec3f ray) {
-    return Vec3f({ 1, 1, 1 });
+    for (auto obj : mObjects) {
+        if (obj->intersect(Vec3f({0, 0, 0}), ray)) {
+            return Vec3f({0.3, 0.3, 0.3});
+        }
+    }
+    return Vec3f({ 0.7, 0.7, 0.7 });
 }

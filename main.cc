@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
     glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
 
+    glClearColor(0.3, 0.3, 0.3, 1);
+
     glutMainLoop();
 
     return 0;
