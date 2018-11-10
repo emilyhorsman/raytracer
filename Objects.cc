@@ -1,3 +1,8 @@
+/**
+ * References:
+ *
+ * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+ */
 #include <cmath>
 
 #include "Objects.h"
@@ -13,6 +18,7 @@ Sphere::Sphere(Vec3f origin, float radius)
 {}
 
 
+// Loosely based on [1].
 bool Sphere::intersect(Vec3f rayOrigin, Vec3f rayDirection, Vec3f &intersection, Vec3f &normal) {
     Vec3f raySphereSegment = subtract(mOrigin, rayOrigin);
     // This is the length of the projection of the ray-sphere line segment
