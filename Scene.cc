@@ -40,7 +40,7 @@ Scene::~Scene() {
 
 
 void Scene::render() {
-    float aspectRatio = mWidth / mHeight;
+    float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
     // Loosely based on [1].
