@@ -3,6 +3,15 @@
  *
  * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
  */
+#ifdef __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
+#  include <GLUT/glut.h>
+#else
+#  include <GL/gl.h>
+#  include <GL/glu.h>
+#  include <GL/freeglut.h>
+#endif
 #include <cmath>
 
 #include "Objects.h"
@@ -10,6 +19,7 @@
 
 SceneObject::SceneObject(Vec3f color)
 : mColor(color)
+, mColorApproximation{ color[0], color[1], color[2], 1 }
 {}
 
 
@@ -53,4 +63,13 @@ bool Sphere::intersect(Vec3f rayOrigin, Vec3f rayDirection, Vec3f &intersection,
     normal = normalize(subtract(intersection, mOrigin));
 
     return true;
+}
+
+
+void Sphere::drawGL() {
+    glPushMatrix();
+    glTranslatef(REST(mOrigin));
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mColorApproximation);
+    glutSolidSphere(mRadius, 20, 20);
+    glPopMatrix();
 }

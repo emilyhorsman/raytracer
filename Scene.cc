@@ -21,7 +21,7 @@
 #include "Vector.h"
 
 
-Vec3f lightPosition({ 0, 0, 0 });
+Vec3f lightPosition({ 2, 5, 3 });
 
 
 Scene::Scene(int width, int height)
@@ -79,8 +79,6 @@ void Scene::render() {
             Vec3f ray = normalize(Vec3f({ pixelX, pixelY, -1 }));
 
             Vec3f color = trace(ray);
-            glColor3f(REST(color));
-            glVertex3f(x, mHeight - y, 0);
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<
@@ -114,4 +112,24 @@ Vec3f Scene::trace(Vec3f ray) {
 
     // The ray didn't intersect with any object.
     return Vec3f({ 0, 0, 0 });
+}
+
+
+void Scene::setPerspectiveProjectionGL(int w, int h) {
+    gluPerspective(
+        mCamera.mFieldOfViewRadians,
+        (float) w / (float) h,
+        0.01f,
+        100
+    );
+
+    glMatrixMode(GL_MODELVIEW);
+    glViewport(0, 0, w, h);
+}
+
+
+void Scene::drawObjectsGL() {
+    for (auto obj : mObjects) {
+        obj->drawGL();
+    }
 }

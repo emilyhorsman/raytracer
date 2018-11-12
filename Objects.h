@@ -7,6 +7,7 @@
 class SceneObject {
     public:
         Vec3f mColor;
+        GLfloat mColorApproximation[4];
 
         SceneObject(Vec3f color);
         virtual ~SceneObject() = default;
@@ -17,6 +18,7 @@ class SceneObject {
             Vec3f &intersection,
             Vec3f &normal
         ) = 0;
+        virtual void drawGL() = 0;
 };
 
 
@@ -33,6 +35,7 @@ class Sphere: public SceneObject {
             Vec3f &intersection,
             Vec3f &normal
         );
+        void drawGL();
 };
 
 

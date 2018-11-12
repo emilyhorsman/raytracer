@@ -17,20 +17,27 @@
 Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
 
 
+GLfloat lightPositionGL[] = { 2, 5, 3, 1 };
+
+
 void handleDisplay() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glLoadIdentity();
+    gluLookAt(
+        0, 0, -1,
+        0, 0, 0,
+        0, 1, 0
+    );
 
-    glBegin(GL_POINTS);
-        scene.render();
-    glEnd();
+    scene.drawObjectsGL();
 
     glFlush();
 }
 
 
-void handleReshape(int w, int h) {
+// TODO: For future raytracing rendering
+void setOrthographicProjection(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
@@ -50,6 +57,11 @@ void handleReshape(int w, int h) {
 }
 
 
+void handleReshape(int w, int h) {
+    scene.setPerspectiveProjectionGL(w, h);
+}
+
+
 void handleKeyboard(unsigned char key, int _x, int _y) {
     if (key == 'q' || key == 'Q') {
         exit(0);
@@ -60,14 +72,21 @@ void handleKeyboard(unsigned char key, int _x, int _y) {
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitWindowSize(CANVAS_WIDTH, CANVAS_HEIGHT);
-    glutInitDisplayMode(GLUT_RGB);
-    glutCreateWindow("Raytracer");
+    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
+    glutCreateWindow("Raytracer Sandbox (Real-time Approximation Mode)");
 
     glutDisplayFunc(handleDisplay);
     glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
 
-    glClearColor(0.3, 0.3, 0.3, 1);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPositionGL);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    scene.render();
 
     glutMainLoop();
 

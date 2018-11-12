@@ -21,6 +21,8 @@ class Scene {
         Scene(int width, int height);
         ~Scene();
         void render();
+        void setPerspectiveProjectionGL(int w, int h);
+        void drawObjectsGL();
 };
 
 
