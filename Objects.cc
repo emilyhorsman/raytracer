@@ -31,7 +31,11 @@ Sphere::Sphere(Vec3f color, Vec3f origin, float radius)
 
 
 // Loosely based on [1].
-bool Sphere::intersect(Vec3f rayOrigin, Vec3f rayDirection, Vec3f &intersection, Vec3f &normal) {
+bool Sphere::intersect(
+    Vec3f rayOrigin,
+    Vec3f rayDirection,
+    float &intersectionScalar
+) {
     Vec3f raySphereSegment = subtract(mOrigin, rayOrigin);
     // This is the length of the projection of the ray-sphere line segment
     // onto the ray.
@@ -53,14 +57,12 @@ bool Sphere::intersect(Vec3f rayOrigin, Vec3f rayDirection, Vec3f &intersection,
     float scalarA = raySphereProjectionNorm - circleDelta;
     float scalarB = raySphereProjectionNorm + circleDelta;
     if (scalarA < scalarB && scalarA > 0) {
-        intersection = add(rayOrigin, multiply(rayDirection, scalarA));
+        intersectionScalar = scalarA;
     } else if (scalarB > 0) {
-        intersection = add(rayOrigin, multiply(rayDirection, scalarB));
+        intersectionScalar = scalarB;
     } else {
         return false;
     }
-
-    normal = normalize(subtract(intersection, mOrigin));
 
     return true;
 }

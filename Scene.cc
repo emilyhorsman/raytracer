@@ -90,28 +90,42 @@ void Scene::render() {
 
 
 Vec3f Scene::trace(Vec3f ray) {
+    std::shared_ptr<SceneObject> intersectionObject = NULL;
+    float intersectionScalar = INFINITY;
+    float scalar;
+
     for (auto obj : mObjects) {
-        Vec3f intersection;
-        Vec3f normal;
-        if (!obj->intersect(Vec3f({0, 0, 0}), ray, intersection, normal)) {
+        if (!obj->intersect(Vec3f({0, 0, 0}), ray, scalar)) {
             continue;
         }
 
-        Vec3f shadowRay = subtract(lightPosition, intersection);
-        Vec3f _i, _n;
-        for (auto testObj : mObjects) {
-            if (testObj->intersect(intersection, shadowRay, _i, _n)) {
-                // Ray-object intersection is in shadow.
-                return multiply(obj->mColor, 0.05f);
-            }
+        if (scalar < intersectionScalar) {
+            intersectionScalar = scalar;
+            intersectionObject = obj;
         }
-
-        float lambertIntensity = dot(normalize(shadowRay), normal);
-        return multiply(obj->mColor, fmin(1, fmax(0.05f, lambertIntensity)));
     }
 
-    // The ray didn't intersect with any object.
-    return Vec3f({ 0, 0, 0 });
+    if (!intersectionObject) {
+        return Vec3f({ 0, 0, 0 });
+    }
+
+    Vec3f intersection = multiply(ray, intersectionScalar);
+    Vec3f normal = normalize(subtract(intersection, intersectionObject->mOrigin));
+    Vec3f shadowRay = subtract(lightPosition, intersection);
+
+    float _k;
+    for (auto testObj : mObjects) {
+        if (testObj->intersect(intersection, shadowRay, _k)) {
+            // Ray-object intersection is in shadow.
+            return multiply(intersectionObject->mColor, 0.05f);
+        }
+    }
+
+    float lambertIntensity = dot(normalize(shadowRay), normal);
+    return multiply(
+        intersectionObject->mColor,
+        fmin(1, fmax(0.05f, lambertIntensity))
+    );
 }
 
 

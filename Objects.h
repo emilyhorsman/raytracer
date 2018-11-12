@@ -16,8 +16,7 @@ class SceneObject {
         virtual bool intersect(
             Vec3f rayOrigin,
             Vec3f rayDirection,
-            Vec3f &intersection,
-            Vec3f &normal
+            float &intersectionScalar
         ) = 0;
         virtual void drawGL() = 0;
 };
@@ -32,8 +31,7 @@ class Sphere: public SceneObject {
         bool intersect(
             Vec3f rayOrigin,
             Vec3f rayDirection,
-            Vec3f &intersection,
-            Vec3f &normal
+            float &intersectionScalar
         );
         void drawGL();
 };
