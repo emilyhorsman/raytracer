@@ -119,7 +119,7 @@ void Scene::setPerspectiveProjectionGL(int w, int h) {
     gluPerspective(
         mCamera.mFieldOfViewRadians,
         (float) w / (float) h,
-        0.01f,
+        1,
         100
     );
 
