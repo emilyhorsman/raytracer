@@ -11,7 +11,7 @@
 
 
 #define CANVAS_WIDTH 600
-#define CANVAS_HEIGHT 400
+#define CANVAS_HEIGHT 500
 
 
 Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -27,7 +27,6 @@ void handleDisplay() {
     glEnd();
 
     glFlush();
-    glutPostRedisplay();
 }
 
 
@@ -60,7 +59,7 @@ void handleKeyboard(unsigned char key, int _x, int _y) {
 
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
-    glutInitWindowSize(600, 400);
+    glutInitWindowSize(CANVAS_WIDTH, CANVAS_HEIGHT);
     glutInitDisplayMode(GLUT_RGB);
     glutCreateWindow("Raytracer");
 
