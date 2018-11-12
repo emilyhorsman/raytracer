@@ -62,7 +62,7 @@ void Scene::render() {
 
             Vec3f color = trace(ray);
             glColor3f(REST(color));
-            glVertex3f(x, y, 0);
+            glVertex3f(x, mHeight - y, 0);
         }
     }
 }
