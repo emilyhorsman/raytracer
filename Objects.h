@@ -6,7 +6,9 @@
 
 class SceneObject {
     public:
-        SceneObject();
+        Vec3f mColor;
+
+        SceneObject(Vec3f color);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -24,7 +26,7 @@ class Sphere: public SceneObject {
         float mRadius;
 
     public:
-        Sphere(Vec3f origin, float radius);
+        Sphere(Vec3f color, Vec3f origin, float radius);
         bool intersect(
             Vec3f rayOrigin,
             Vec3f rayDirection,

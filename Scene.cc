@@ -72,9 +72,23 @@ Vec3f Scene::trace(Vec3f ray) {
     for (auto obj : mObjects) {
         Vec3f intersection;
         Vec3f normal;
-        if (obj->intersect(Vec3f({0, 0, 0}), ray, intersection, normal)) {
-            return Vec3f({0.3, 0.3, 0.3});
+        if (!obj->intersect(Vec3f({0, 0, 0}), ray, intersection, normal)) {
+            continue;
         }
+
+        Vec3f shadowRay = subtract(lightPosition, intersection);
+        Vec3f _i, _n;
+        for (auto testObj : mObjects) {
+            if (testObj->intersect(intersection, shadowRay, _i, _n)) {
+                // Ray-object intersection is in shadow.
+                return multiply(obj->mColor, 0.05f);
+            }
+        }
+
+        float lambertIntensity = dot(normalize(shadowRay), normal);
+        return multiply(obj->mColor, fmin(1, 0.05 + lambertIntensity));
     }
-    return Vec3f({ 0.7, 0.7, 0.7 });
+
+    // The ray didn't intersect with any object.
+    return Vec3f({ 0, 0, 0 });
 }

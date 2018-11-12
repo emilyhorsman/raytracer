@@ -8,11 +8,13 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject() {}
+SceneObject::SceneObject(Vec3f color)
+: mColor(color)
+{}
 
 
-Sphere::Sphere(Vec3f origin, float radius)
-: SceneObject()
+Sphere::Sphere(Vec3f color, Vec3f origin, float radius)
+: SceneObject(color)
 , mOrigin(origin)
 , mRadius(radius)
 {}
