@@ -13,6 +13,7 @@
 #  include <GL/freeglut.h>
 #endif
 #include <cmath>
+#include <fstream>
 #include <memory>
 
 #include "Objects.h"
@@ -61,9 +62,11 @@ void Scene::render() {
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
+    std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
+    img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
     // Loosely based on [1].
-    for (int x = 0; x < mWidth; x++) {
-        for (int y = 0; y < mHeight; y++) {
+    for (int y = 0; y < mHeight; y++) {
+        for (int x = 0; x < mWidth; x++) {
             // Normalize the raster space (mWidth by mHeight pixels) into
             // [0,1] with a 0.5 shift in raster space to center the pixels.
             // NDC assumes (0, 0) is the top-left point.
@@ -78,8 +81,13 @@ void Scene::render() {
             Vec3f color = trace(ray);
             glColor3f(REST(color));
             glVertex3f(x, mHeight - y, 0);
+
+            img << (unsigned char)(color[0] * 255) <<
+                   (unsigned char)(color[1] * 255) <<
+                   (unsigned char)(color[2] * 255);
         }
     }
+    img.close();
 }
 
 
