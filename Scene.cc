@@ -107,7 +107,7 @@ Vec3f Scene::trace(Vec3f ray) {
         }
 
         float lambertIntensity = dot(normalize(shadowRay), normal);
-        return multiply(obj->mColor, fmin(1, 0.05 + lambertIntensity));
+        return multiply(obj->mColor, fmin(1, fmax(0.05f, lambertIntensity)));
     }
 
     // The ray didn't intersect with any object.
