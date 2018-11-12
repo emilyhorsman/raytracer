@@ -2,6 +2,7 @@
  * References:
  *
  * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
+ * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
  */
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
@@ -21,7 +22,10 @@
 #include "Vector.h"
 
 
-Vec3f lightPosition({ 2, 3, 0 });
+#define MAX_DEPTH 3
+
+
+Vec3f lightPosition({ 0, 0, 0 });
 
 
 Scene::Scene(int width, int height)
@@ -32,23 +36,18 @@ Scene::Scene(int width, int height)
 {
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({1, 0, 0}),
-            Vec3f({0.25f, -0.25f, -0.5}),
-            0.25f
-        )
-    );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({0, 1, 0}),
-            Vec3f({-0.5f, 0.5f, -1.5}),
-            0.25f
-        )
-    );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
             Vec3f({0, 0, 1}),
-            Vec3f({0.0f, 0.0f, -1}),
-            0.5f
+            0.4, 0.6,
+            Vec3f({0.3f, 0, -1}),
+            0.35f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({1, 0, 0}),
+            0.8, 0.2,
+            Vec3f({-0.5f, 0.5f, -1.5}),
+            0.3f
         )
     );
 }
@@ -90,12 +89,17 @@ void Scene::render() {
 
 
 Vec3f Scene::trace(Vec3f ray) {
+    return trace(Vec3f({0, 0, 0}), ray, 0);
+}
+
+
+Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar = INFINITY;
     float scalar;
 
     for (auto obj : mObjects) {
-        if (!obj->intersect(Vec3f({0, 0, 0}), ray, scalar)) {
+        if (!obj->intersect(origin, ray, scalar)) {
             continue;
         }
 
@@ -112,20 +116,46 @@ Vec3f Scene::trace(Vec3f ray) {
     Vec3f intersection = multiply(ray, intersectionScalar);
     Vec3f normal = normalize(subtract(intersection, intersectionObject->mOrigin));
     Vec3f shadowRay = subtract(lightPosition, intersection);
+    Vec3f color = Vec3f({ 0, 0, 0 });
 
+    float diffuse = intersectionObject->mDiffuse;
     float _k;
     for (auto testObj : mObjects) {
         if (testObj->intersect(intersection, shadowRay, _k)) {
             // Ray-object intersection is in shadow.
-            return multiply(intersectionObject->mColor, 0.05f);
+            diffuse = 0;
+            break;
         }
     }
 
-    float lambertIntensity = dot(normalize(shadowRay), normal);
-    return multiply(
-        intersectionObject->mColor,
-        fmin(1, fmax(0.05f, lambertIntensity))
-    );
+    if (diffuse > 0) {
+        float lambertIntensity = dot(normalize(shadowRay), normal);
+        color = add(
+            color,
+                multiply(
+                intersectionObject->mColor,
+                intersectionObject->mDiffuse * fmax(0, lambertIntensity)
+            )
+        );
+    }
+
+    if (intersectionObject->mSpecular > 0 && depth < MAX_DEPTH) {
+        // Reflection direction computation based on [2].
+        Vec3f reflectionDiretion = subtract(
+            ray,
+            multiply(
+                normal,
+                2 * dot(ray, normal)
+            )
+        );
+        Vec3f reflectionColor = trace(intersection, reflectionDiretion, depth + 1);
+        color = add(
+            color,
+            multiply(reflectionColor, intersectionObject->mSpecular)
+        );
+    }
+
+    return color;
 }
 
 

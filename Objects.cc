@@ -17,15 +17,23 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject(Vec3f color, Vec3f origin)
+SceneObject::SceneObject(Vec3f color, float diffuse, float specular, Vec3f origin)
 : mColor(color)
 , mColorApproximation{ color[0], color[1], color[2], 1 }
+, mDiffuse(diffuse)
+, mSpecular(specular)
 , mOrigin(origin)
 {}
 
 
-Sphere::Sphere(Vec3f color, Vec3f origin, float radius)
-: SceneObject(color, origin)
+Sphere::Sphere(
+    Vec3f color,
+    float diffuse,
+    float specular,
+    Vec3f origin,
+    float radius
+)
+: SceneObject(color, diffuse, specular, origin)
 , mRadius(radius)
 {}
 
