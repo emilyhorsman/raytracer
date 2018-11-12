@@ -38,14 +38,12 @@ bool Sphere::intersect(Vec3f rayOrigin, Vec3f rayDirection, Vec3f &intersection,
     }
 
     float circleDelta = sqrt(radiusSq - discriminant);
-    Vec3f intersectionA = subtract(raySphereSegment, circleDelta);
-    Vec3f intersectionB = add(raySphereSegment, circleDelta);
-    float normA = dot(intersectionA, intersectionA);
-    float normB = dot(intersectionB, intersectionB);
-    if (normA < normB && normA > 0) {
-        intersection = intersectionA;
-    } else if (normB > 0) {
-        intersection = intersectionB;
+    float scalarA = raySphereProjectionNorm - circleDelta;
+    float scalarB = raySphereProjectionNorm + circleDelta;
+    if (scalarA < scalarB && scalarA > 0) {
+        intersection = add(rayOrigin, multiply(rayDirection, scalarA));
+    } else if (scalarB > 0) {
+        intersection = add(rayOrigin, multiply(rayDirection, scalarB));
     } else {
         return false;
     }
