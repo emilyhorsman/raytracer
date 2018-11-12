@@ -33,22 +33,22 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({1, 0, 0}),
-            Vec3f({0, 0, -1.5f}),
-            0.3f
-        )
-    );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({0, 0, 1}),
-            Vec3f({0.5f, 0.5f, -1.5f}),
+            Vec3f({0.25f, -0.25f, -0.5}),
             0.25f
         )
     );
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({0, 1, 0}),
-            Vec3f({-0.5f, 0.5f, -1}),
+            Vec3f({-0.5f, 0.5f, -1.5}),
             0.25f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({0, 0, 1}),
+            Vec3f({0.0f, 0.0f, -1}),
+            0.5f
         )
     );
 }
@@ -116,15 +116,16 @@ Vec3f Scene::trace(Vec3f ray) {
 
 
 void Scene::setPerspectiveProjectionGL(int w, int h) {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
     gluPerspective(
-        mCamera.mFieldOfViewRadians,
+        mCamera.mFieldOfViewRadians * (180.0f / M_PI),
         (float) w / (float) h,
-        1,
+        0.1,
         100
     );
 
     glMatrixMode(GL_MODELVIEW);
-    glViewport(0, 0, w, h);
 }
 
 
