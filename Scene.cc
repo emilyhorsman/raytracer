@@ -21,7 +21,7 @@
 #include "Vector.h"
 
 
-Vec3f lightPosition({ 2, 5, 3 });
+Vec3f lightPosition({ 2, 3, 0 });
 
 
 Scene::Scene(int width, int height)
