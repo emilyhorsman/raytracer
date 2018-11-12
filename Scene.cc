@@ -20,7 +20,7 @@
 #include "Vector.h"
 
 
-Vec3f lightPosition({ 1, 1, -1 });
+Vec3f lightPosition({ 0, 0, 0 });
 
 
 Scene::Scene(int width, int height)
@@ -31,8 +31,23 @@ Scene::Scene(int width, int height)
 {
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({0, 0, -1}),
-            0.5f
+            Vec3f({1, 0, 0}),
+            Vec3f({0, 0, -1.5f}),
+            0.3f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({0, 0, 1}),
+            Vec3f({0.5f, 0.5f, -1.5f}),
+            0.25f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({0, 1, 0}),
+            Vec3f({-0.5f, 0.5f, -1}),
+            0.25f
         )
     );
 }
