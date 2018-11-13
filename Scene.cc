@@ -25,7 +25,11 @@
 #define MAX_DEPTH 3
 
 
-Vec3f lightPosition({ 0, 1, 0 });
+Vec3f lightPosition[3] = {
+    { 0, 1, 0 },
+    { 1, 2, -1 },
+    { 0.5f, 2, 1 },
+};
 
 
 Scene::Scene(int width, int height)
@@ -38,7 +42,7 @@ Scene::Scene(int width, int height)
         std::make_shared<Sphere>(
             Vec3f({0, 0, 1}),
             0.4, 0.6,
-            Vec3f({0.3f, 0, -1}),
+            Vec3f({0.5f, 0, -1}),
             0.3f
         )
     );
@@ -123,28 +127,33 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     Vec3f intersection = multiply(ray, intersectionScalar);
     Vec3f normal = intersectionObject->getNormalDir(intersection);
-    Vec3f shadowRay = normalize(subtract(lightPosition, intersection));
     Vec3f color = Vec3f({ 0, 0, 0 });
-
     float diffuse = intersectionObject->mDiffuse;
-    float k;
-    for (auto testObj : mObjects) {
-        // We need to check for just a smidge of bias to ensure we're not
-        // intersecting with testObj.
-        if (testObj->intersect(intersection, shadowRay, k) && k > 1e-4) {
-            // Ray-object intersection is in shadow.
-            diffuse = 0;
-            break;
-        }
-    }
 
     if (diffuse > 0) {
-        float lambertIntensity = dot(shadowRay, normal);
+        float lambertIntensity = 0;
+        for (int i = 0; i < 3; i++) {
+            Vec3f shadowRay = normalize(subtract(lightPosition[i], intersection));
+
+            float k;
+            for (auto testObj : mObjects) {
+                // We need to check for just a smidge of bias to ensure we're not
+                // intersecting with testObj.
+                if (testObj->intersect(intersection, shadowRay, k) && k > 1e-4) {
+                    // Ray-object intersection is in shadow.
+                    diffuse = 0;
+                    break;
+                }
+            }
+
+            lambertIntensity += diffuse * dot(shadowRay, normal);
+        }
+
         color = add(
             color,
             multiply(
                 intersectionObject->getColor(REST(intersection)),
-                intersectionObject->mDiffuse * fmax(0, lambertIntensity)
+                fmax(0, lambertIntensity) * 0.7f
             )
         );
     }
@@ -169,7 +178,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         );
     }
 
-    return color;
+    return truncate(color, 1);
 }
 
 

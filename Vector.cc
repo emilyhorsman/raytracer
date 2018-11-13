@@ -80,3 +80,12 @@ Vec3f divide(Vec3f v, float denominator) {
 float dot(Vec3f u, Vec3f v) {
     return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
+
+
+Vec3f truncate(Vec3f v, float maximum) {
+    Vec3f output;
+    output[0] = fmin(v[0], maximum);
+    output[1] = fmin(v[1], maximum);
+    output[2] = fmin(v[2], maximum);
+    return output;
+}

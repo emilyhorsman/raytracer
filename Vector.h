@@ -40,4 +40,7 @@ Vec3f divide(Vec3f v, float denominator);
 float dot(Vec3f u, Vec3f v);
 
 
+Vec3f truncate(Vec3f v, float maximum);
+
+
 #endif
