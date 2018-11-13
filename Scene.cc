@@ -25,7 +25,7 @@
 #define MAX_DEPTH 3
 
 
-Vec3f lightPosition({ 0, 0, 0 });
+Vec3f lightPosition({ 0, 1, 0 });
 
 
 Scene::Scene(int width, int height)
@@ -39,23 +39,23 @@ Scene::Scene(int width, int height)
             Vec3f({0, 0, 1}),
             0.4, 0.6,
             Vec3f({0.3f, 0, -1}),
-            0.35f
+            0.3f
         )
     );
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({1, 0, 0}),
             0.8, 0.2,
-            Vec3f({-0.5f, 0.5f, -1.5}),
+            Vec3f({-0.5f, 0.5f, -1.1}),
             0.3f
         )
     );
     mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 1, 1, 1 }),
-            0.9, 0.1,
+            0.7, 0.3,
             Vec3f({ 0, -0.5, 0 }),
-            Vec3f({ 0.1f, 1, 0.3f })
+            Vec3f({ 0, 1, 0 })
         )
     );
 }
