@@ -25,10 +25,9 @@
 #define MAX_DEPTH 3
 
 
-Vec3f lightPosition[3] = {
+Vec3f lightPosition[2] = {
     { 0, 1, 0 },
-    { 1, 2, -1 },
-    { 0.5f, 2, 1 },
+    { 1, 2, -1 }
 };
 
 
@@ -65,7 +64,20 @@ Scene::Scene(int width, int height)
 }
 
 
-Scene::~Scene() {
+Scene::~Scene() {}
+
+
+Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y) {
+    // Normalize the raster space (mWidth by mHeight pixels) into
+    // [0,1] with a 0.5 shift in raster space to center the pixels.
+    // NDC assumes (0, 0) is the top-left point.
+    float deviceCoordX = (x + 0.5f) / (float) mWidth;
+    float deviceCoordY = (y + 0.5f) / (float) mHeight;
+    // Centered (0, 0) origin with (1, 1) in the top-right.
+    float pixelX = (2 * deviceCoordX - 1) * fovRatio * aspectRatio;
+    float pixelY = (1 - 2 * deviceCoordY) * fovRatio;
+
+    return normalize(Vec3f({ pixelX, pixelY, -1 }));
 }
 
 
@@ -78,16 +90,7 @@ void Scene::render() {
     // Loosely based on [1].
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
-            // Normalize the raster space (mWidth by mHeight pixels) into
-            // [0,1] with a 0.5 shift in raster space to center the pixels.
-            // NDC assumes (0, 0) is the top-left point.
-            float deviceCoordX = (x + 0.5f) / (float) mWidth;
-            float deviceCoordY = (y + 0.5f) / (float) mHeight;
-            // Centered (0, 0) origin with (1, 1) in the top-right.
-            float pixelX = (2 * deviceCoordX - 1) * fovRatio * aspectRatio;
-            float pixelY = (1 - 2 * deviceCoordY) * fovRatio;
-
-            Vec3f ray = normalize(Vec3f({ pixelX, pixelY, -1 }));
+            Vec3f ray = computeRay(aspectRatio, fovRatio, x, y);
 
             Vec3f color = trace(ray);
 
@@ -132,7 +135,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     if (diffuse > 0) {
         float lambertIntensity = 0;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             Vec3f shadowRay = normalize(subtract(lightPosition[i], intersection));
 
             float k;
@@ -153,7 +156,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color,
             multiply(
                 intersectionObject->getColor(REST(intersection)),
-                fmax(0, lambertIntensity) * 0.7f
+                fmax(0, lambertIntensity)
             )
         );
     }

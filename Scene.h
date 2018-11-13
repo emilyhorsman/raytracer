@@ -15,6 +15,7 @@ class Scene {
         int mWidth;
         int mHeight;
 
+        Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
         Vec3f trace(Vec3f ray);
 
