@@ -10,9 +10,8 @@ class SceneObject {
         GLfloat mColorApproximation[4];
         float mDiffuse;
         float mSpecular;
-        Vec3f mOrigin;
 
-        SceneObject(Vec3f color, float diffuse, float specular, Vec3f origin);
+        SceneObject(Vec3f color, float diffuse, float specular);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -21,11 +20,13 @@ class SceneObject {
             float &intersectionScalar
         ) = 0;
         virtual void drawGL() = 0;
+        virtual Vec3f getNormalDir(Vec3f intersection) = 0;
 };
 
 
-class Sphere: public SceneObject {
+class Sphere : public SceneObject {
     private:
+        Vec3f mOrigin;
         float mRadius;
 
     public:
@@ -42,6 +43,31 @@ class Sphere: public SceneObject {
             float &intersectionScalar
         );
         void drawGL();
+        Vec3f getNormalDir(Vec3f intersection);
+};
+
+
+class Plane : public SceneObject {
+    private:
+        Vec3f mPoint;
+        Vec3f mNormal;
+        float computeY(float x, float z);
+
+    public:
+        Plane(
+            Vec3f color,
+            float diffuse,
+            float specular,
+            Vec3f point,
+            Vec3f normal
+        );
+        bool intersect(
+            Vec3f rayOrigin,
+            Vec3f rayDirection,
+            float &intersectionScalar
+        );
+        void drawGL();
+        Vec3f getNormalDir(Vec3f intersection);
 };
 
 

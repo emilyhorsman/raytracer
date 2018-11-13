@@ -50,6 +50,14 @@ Scene::Scene(int width, int height)
             0.3f
         )
     );
+    mObjects.push_back(
+        std::make_shared<Plane>(
+            Vec3f({ 1, 1, 1 }),
+            0.9, 0.1,
+            Vec3f({ 0, -0.5, 0 }),
+            Vec3f({ 0.1f, 1, 0.3f })
+        )
+    );
 }
 
 
@@ -114,14 +122,16 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     Vec3f intersection = multiply(ray, intersectionScalar);
-    Vec3f normal = normalize(subtract(intersection, intersectionObject->mOrigin));
-    Vec3f shadowRay = subtract(lightPosition, intersection);
+    Vec3f normal = intersectionObject->getNormalDir(intersection);
+    Vec3f shadowRay = normalize(subtract(lightPosition, intersection));
     Vec3f color = Vec3f({ 0, 0, 0 });
 
     float diffuse = intersectionObject->mDiffuse;
-    float _k;
+    float k;
     for (auto testObj : mObjects) {
-        if (testObj->intersect(intersection, shadowRay, _k)) {
+        // We need to check for just a smidge of bias to ensure we're not
+        // intersecting with testObj.
+        if (testObj->intersect(intersection, shadowRay, k) && k > 1e-4) {
             // Ray-object intersection is in shadow.
             diffuse = 0;
             break;
@@ -129,7 +139,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     if (diffuse > 0) {
-        float lambertIntensity = dot(normalize(shadowRay), normal);
+        float lambertIntensity = dot(shadowRay, normal);
         color = add(
             color,
                 multiply(
@@ -148,7 +158,11 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 2 * dot(ray, normal)
             )
         );
-        Vec3f reflectionColor = trace(intersection, reflectionDiretion, depth + 1);
+        Vec3f reflectionColor = trace(
+            add(intersection, multiply(normal, 1e-4)),
+            reflectionDiretion,
+            depth + 1
+        );
         color = add(
             color,
             multiply(reflectionColor, intersectionObject->mSpecular)
