@@ -146,7 +146,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 }
             }
 
-            lambertIntensity += diffuse * dot(shadowRay, normal);
+            lambertIntensity += diffuse * fmax(0, dot(shadowRay, normal));
         }
 
         color = add(
