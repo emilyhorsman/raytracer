@@ -90,6 +90,11 @@ Vec3f Sphere::getNormalDir(Vec3f intersection) {
 }
 
 
+Vec3f Sphere::getColor(float _x, float _y, float _z) {
+    return mColor;
+}
+
+
 Plane::Plane(
     Vec3f color,
     float diffuse,
@@ -147,4 +152,16 @@ void Plane::drawGL() {
 
 Vec3f Plane::getNormalDir(Vec3f intersection) {
     return mNormal;
+}
+
+
+Vec3f Plane::getColor(float x, float y, float z) {
+    int checkerX = (int) (x * 10);
+    int checkerZ = (int) (z * 10);
+
+    if ((checkerX + checkerZ) % 2 == 0) {
+        return Vec3f({ 0.7, 0.7, 0.7 });
+    } else {
+        return Vec3f({ 1, 1, 1 });
+    }
 }

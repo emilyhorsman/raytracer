@@ -45,7 +45,7 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({1, 0, 0}),
-            0.8, 0.2,
+            0.7, 0.3,
             Vec3f({-0.5f, 0.5f, -1.1}),
             0.3f
         )
@@ -142,8 +142,8 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         float lambertIntensity = dot(shadowRay, normal);
         color = add(
             color,
-                multiply(
-                intersectionObject->mColor,
+            multiply(
+                intersectionObject->getColor(REST(intersection)),
                 intersectionObject->mDiffuse * fmax(0, lambertIntensity)
             )
         );
