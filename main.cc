@@ -17,9 +17,6 @@
 Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
 
 
-GLfloat lightPositionGL[] = { 2, 5, 3, 1 };
-
-
 void handleDisplay() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -79,9 +76,9 @@ int main(int argc, char **argv) {
     glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
 
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPositionGL);
     glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
+    scene.setLightingParamsGL();
+    scene.enableLightingGL();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);

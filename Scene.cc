@@ -25,18 +25,35 @@
 #define MAX_DEPTH 3
 
 
-Vec3f lightPosition[2] = {
-    { 0, 1, 0 },
-    { 1, 2, -1 }
-};
-
-
 Scene::Scene(int width, int height)
 : mObjects()
+, mPointLights()
 , mCamera()
 , mWidth(width)
 , mHeight(height)
 {
+    mPointLights.push_back(
+        {
+            Vec3f({ 0, 1, 0 }),
+            { 0, 1, 0, 1 },
+            0.7
+        }
+    );
+    mPointLights.push_back(
+        {
+            Vec3f({ 1, 2, -1 }),
+            { 1, 2, -1, 1 },
+            0.7
+        }
+    );
+    mPointLights.push_back(
+        {
+            Vec3f({ -0.5f, -0.1f, -1 }),
+            { -0.5f, 0.1f, -1, 1 },
+            0.7
+        }
+    );
+
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({0, 0, 1}),
@@ -135,8 +152,8 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     if (diffuse > 0) {
         float lambertIntensity = 0;
-        for (int i = 0; i < 2; i++) {
-            Vec3f shadowRay = normalize(subtract(lightPosition[i], intersection));
+        for (auto pointLight : mPointLights) {
+            Vec3f shadowRay = normalize(subtract(pointLight.mPosition, intersection));
 
             float k;
             for (auto testObj : mObjects) {
@@ -149,7 +166,11 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 }
             }
 
-            lambertIntensity += diffuse * fmax(0, dot(shadowRay, normal));
+            lambertIntensity += (
+                diffuse *
+                pointLight.mIntensity *
+                fmax(0, dot(shadowRay, normal))
+            );
         }
 
         color = add(
@@ -202,5 +223,23 @@ void Scene::setPerspectiveProjectionGL(int w, int h) {
 void Scene::drawObjectsGL() {
     for (auto obj : mObjects) {
         obj->drawGL();
+    }
+}
+
+
+void Scene::setLightingParamsGL() {
+    for (int i = 0; i < std::min(8ul, mPointLights.size()); i++) {
+        glLightfv(
+            GL_LIGHT0 + i,
+            GL_POSITION,
+            mPointLights[i].mPositionGL
+        );
+    }
+}
+
+
+void Scene::enableLightingGL() {
+    for (int i = 0; i < std::min(8ul, mPointLights.size()); i++) {
+        glEnable(GL_LIGHT0 + i);
     }
 }

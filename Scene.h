@@ -6,11 +6,13 @@
 
 #include "Camera.h"
 #include "Objects.h"
+#include "PointLight.h"
 
 
 class Scene {
     private:
         std::vector<std::shared_ptr<SceneObject>> mObjects;
+        std::vector<PointLight> mPointLights;
         Camera mCamera;
         int mWidth;
         int mHeight;
@@ -25,6 +27,8 @@ class Scene {
         void render();
         void setPerspectiveProjectionGL(int w, int h);
         void drawObjectsGL();
+        void setLightingParamsGL();
+        void enableLightingGL();
 };
 
 
