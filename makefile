@@ -8,6 +8,7 @@ CXX=g++
 CPPFLAGS=-DGL_SILENCE_DEPRECATION -Wall -std=c++11 -Wno-deprecated
 EXEEXT=
 RM=rm
+DOXYGEN=doxygen
 
 # Windows (cygwin)
 ifeq "$(OS)" "Windows_NT"
@@ -32,3 +33,7 @@ $(PROGRAM_NAME): $(OBJECT_DEPS)
 
 clean:
 	$(RM) *.o $(PROGRAM_NAME)$(EXEEXT)
+	$(RM) -rf html latex
+
+docs:
+	$(DOXYGEN) Doxyfile
