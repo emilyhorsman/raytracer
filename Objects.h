@@ -8,10 +8,11 @@ class SceneObject {
     public:
         Vec3f mColor;
         GLfloat mColorApproximation[4];
+        float mAmbient;
         float mDiffuse;
         float mSpecular;
 
-        SceneObject(Vec3f color, float diffuse, float specular);
+        SceneObject(Vec3f color, float ambient, float diffuse, float specular);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -33,6 +34,7 @@ class Sphere : public SceneObject {
     public:
         Sphere(
             Vec3f color,
+            float ambient,
             float diffuse,
             float specular,
             Vec3f origin,
@@ -58,6 +60,7 @@ class Plane : public SceneObject {
     public:
         Plane(
             Vec3f color,
+            float ambient,
             float diffuse,
             float specular,
             Vec3f point,

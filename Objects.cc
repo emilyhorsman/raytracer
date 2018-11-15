@@ -17,9 +17,10 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject(Vec3f color, float diffuse, float specular)
+SceneObject::SceneObject(Vec3f color, float ambient, float diffuse, float specular)
 : mColor(color)
 , mColorApproximation{ color[0], color[1], color[2], 1 }
+, mAmbient(ambient)
 , mDiffuse(diffuse)
 , mSpecular(specular)
 {}
@@ -27,12 +28,13 @@ SceneObject::SceneObject(Vec3f color, float diffuse, float specular)
 
 Sphere::Sphere(
     Vec3f color,
+    float ambient,
     float diffuse,
     float specular,
     Vec3f origin,
     float radius
 )
-: SceneObject(color, diffuse, specular)
+: SceneObject(color, ambient, diffuse, specular)
 , mOrigin(origin)
 , mRadius(radius)
 {}
@@ -97,12 +99,13 @@ Vec3f Sphere::getColor(float _x, float _y, float _z) {
 
 Plane::Plane(
     Vec3f color,
+    float ambient,
     float diffuse,
     float specular,
     Vec3f point,
     Vec3f normal
 )
-: SceneObject(color, diffuse, specular)
+: SceneObject(color, ambient, diffuse, specular)
 , mPoint(point)
 , mNormal(normal)
 {}

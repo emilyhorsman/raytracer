@@ -156,28 +156,29 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             Vec3f shadowRay = normalize(subtract(pointLight.mPosition, intersection));
 
             float k;
+            bool isShadow = false;
             for (auto testObj : mObjects) {
                 // We need to check for just a smidge of bias to ensure we're not
                 // intersecting with testObj.
                 if (testObj->intersect(intersection, shadowRay, k) && k > 1e-4) {
-                    // Ray-object intersection is in shadow.
-                    diffuse = 0;
+                    isShadow = true;
                     break;
                 }
             }
 
-            lambertIntensity += (
-                diffuse *
-                pointLight.mIntensity *
-                fmax(0, dot(shadowRay, normal))
-            );
+            if (!isShadow) {
+                lambertIntensity += (
+                    pointLight.mIntensity *
+                    fmax(0, dot(shadowRay, normal))
+                );
+            }
         }
 
         color = add(
             color,
             multiply(
                 intersectionObject->getColor(REST(intersection)),
-                fmax(0, lambertIntensity)
+                fmax(0, fmin(1, intersectionObject->mAmbient + diffuse * lambertIntensity))
             )
         );
     }
