@@ -62,6 +62,19 @@ Scene::Scene(int width, int height)
 Scene::~Scene() {}
 
 
+/**
+ * Computes the direction of a ray from the focal point to the (x, y)
+ * pixel space coordinate on the rendering plane (the final image!).
+ *
+ * \param aspectRatio \f$\frac{\text{image width}}{\text{image height}}\f$
+ * \param fovRatio This should be computed by
+ *      \f$\tan\left(\frac{\text{fov}}{2}\right)\f$ where fov is the vertical
+ *      field of view in radians. It is halved because the ray direction is
+ *      computed with a right triangle formed from splitting the field of view
+ *      in two halves.
+ * \param x Pixel space coordinate on the rendering plane.
+ * \param y Pixel space coordinate on the rendering plane.
+ */
 Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y) {
     // Normalize the raster space (mWidth by mHeight pixels) into
     // [0,1] with a 0.5 shift in raster space to center the pixels.
@@ -76,6 +89,9 @@ Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y) {
 }
 
 
+/**
+ * Renders a scene to a PPM image.
+ */
 void Scene::render() {
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
