@@ -201,7 +201,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (depth < MAX_DEPTH) {
         Vec3f transmissionDirection = refractionDir(ray, normal, 1.5);
         Vec3f transmissionColor = trace(
-            intersection,
+            subtract(intersection, multiply(normal, 1e-4)),
             transmissionDirection,
             depth + 1
         );
@@ -255,11 +255,11 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
         (1 - projectionOntoNormalLength * projectionOntoNormalLength)
     );
     if (base < 0) {
-        return Vec3f({ 0, 0, 0 });
+        return ray;
     }
 
     // (3) Now we can actually compute the direction of the transmission ray.
-    return add(
+    return normalize(add(
         multiply(
             ray,
             snellIndexRatio
@@ -268,7 +268,7 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
             n,
             snellIndexRatio * projectionOntoNormalLength - sqrtf(base)
         )
-    );
+    ));
 }
 
 
