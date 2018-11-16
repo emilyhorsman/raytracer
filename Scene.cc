@@ -3,6 +3,7 @@
  *
  * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
  * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
+ * [3] https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
  */
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
@@ -43,7 +44,7 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({1, 0, 0}),
-            0.2f, 0.8f, 0,
+            0.2f, 0, 0,
             Vec3f({0, 0, -1}),
             0.5f
         )
@@ -197,7 +198,77 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         );
     }
 
+    if (depth < MAX_DEPTH) {
+        Vec3f transmissionDirection = refractionDir(ray, normal, 1.5);
+        Vec3f transmissionColor = trace(
+            intersection,
+            transmissionDirection,
+            depth + 1
+        );
+        color = add(
+            color,
+            multiply(transmissionColor, 0.5)
+        );
+    }
+
     return truncate(color, 1);
+}
+
+
+/**
+ * Computes the direction of the transmission ray by computing the refraction
+ * on the incident ray.
+ *
+ * Assumption: The interface is always between "air" and the medium of the
+ * object the incident ray has intersected. This means that this function will
+ * not correctly handle a situation where a ray is travelling through object A
+ * and then intersects object B before leaving object A. TODO #2
+ *
+ * Based on [3].
+ */
+Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
+    // (1) Setup the reflection normal and ratio of refraction indices from
+    //     Snell's law.
+    float projectionOntoNormalLength = dot(ray, normal);
+    bool isIncidentInsideIntersection = projectionOntoNormalLength > 0;
+    Vec3f n = normal;
+    float snellIndexRatio;
+    if (isIncidentInsideIntersection) {
+        // We should be reflecting across a normal inside the object, so
+        // re-orient the normal to be inside.
+        n = multiply(n, -1);
+        // The ray is transiting from the object medium to air, thus
+        // refractionIndex / 1.
+        snellIndexRatio = refractionIndex;
+    } else {
+        projectionOntoNormalLength = -projectionOntoNormalLength;
+        // The ray is transiting from air to the object medium.
+        snellIndexRatio = 1.0f / refractionIndex;
+    }
+
+    // (2) If the reflection dictated by Snell's law causes the transmission
+    //     ray to stay in the origin medium then there is no refraction. This
+    //     happens when the incident ray is at a "critical angle" with the
+    //     normal.
+    float base = (
+        1 - snellIndexRatio * snellIndexRatio *
+        (1 - projectionOntoNormalLength * projectionOntoNormalLength)
+    );
+    if (base < 0) {
+        return Vec3f({ 0, 0, 0 });
+    }
+
+    // (3) Now we can actually compute the direction of the transmission ray.
+    return add(
+        multiply(
+            ray,
+            snellIndexRatio
+        ),
+        multiply(
+            n,
+            snellIndexRatio * projectionOntoNormalLength - sqrtf(base)
+        )
+    );
 }
 
 
