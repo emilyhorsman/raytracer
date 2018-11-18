@@ -10,6 +10,7 @@
 #  include <GL/freeglut.h>
 #endif
 #include "../Objects.h"
+#include "../Scene.h"
 #include "../Vector.h"
 
 
@@ -70,3 +71,30 @@ TEST_CASE("Ray-sphere intersection fails with ray direction missing object") {
     float scalar;
     REQUIRE(!s.intersect(rayOrigin, rayDirection, scalar));
 }
+
+
+TEST_CASE("Scene computes refraction direction correctly") {
+    Scene scene(1, 1);
+    Vec3f rayDirection = normalize(Vec3f({ 0, -sinf(M_PI / 6.0f), -1 }));
+    printf("Ray direction: %f %f %f\n", REST(rayDirection));
+    Vec3f normal({ 0, 1, 0 });
+    Vec3f refraction = scene.refractionDir(rayDirection, normal, 1.2f);
+    printf("%f %f %f\n", REST(refraction));
+    printf("exp: %f %f %f\n", REST(normalize(Vec3f({0, -sinf(M_PI / 6.0f) / 1.2f, -1}))));
+    REQUIRE(refraction[1] == -sinf(M_PI / 6.0f) / 1.2f);
+}
+
+
+/*TEST_CASE("Scene computes refraction direction correctly") {
+    Scene scene(1, 1);
+    Sphere s(zero, 0, 0, 0, Vec3f({ 0, 0, -1 }), 0.5f);
+    Vec3f rayDirection = normalize(Vec3f({ 0, sinf(M_PI / 6.0f), -1 }));
+    float scalar;
+    REQUIRE(s.intersect(zero, rayDirection, scalar));
+    Vec3f normal = s.getNormalDir(multiply(rayDirection, scalar));
+    printf("Normal: %f %f %f\n", REST(normal));
+
+    //Vec3f normal = normalize(Vec3f({ 0, sinf(M_PI / 3.0f), cosf(M_PI / 3.0f) }));
+    Vec3f refraction = scene.refractionDir(rayDirection, normal, 1.1);
+    printf("%f %f %f\n", REST(refraction));
+}*/

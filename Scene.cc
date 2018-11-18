@@ -198,16 +198,17 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         );
     }
 
-    if (depth < MAX_DEPTH) {
-        Vec3f transmissionDirection = refractionDir(ray, normal, 1.5);
+    if (depth < MAX_DEPTH && intersectionObject->mColor[2] == 0) {
+        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f);
+        float bias = dot(ray, normal) > 0 ? -1 : 1;
         Vec3f transmissionColor = trace(
-            subtract(intersection, multiply(normal, 1e-4)),
+            add(intersection, multiply(normal, bias * 1e-4)),
             transmissionDirection,
             depth + 1
         );
         color = add(
             color,
-            multiply(transmissionColor, 0.5)
+            multiply(transmissionColor, 0.9f)
         );
     }
 
@@ -241,18 +242,19 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
         // refractionIndex / 1.
         snellIndexRatio = refractionIndex;
     } else {
-        projectionOntoNormalLength = -projectionOntoNormalLength;
         // The ray is transiting from air to the object medium.
         snellIndexRatio = 1.0f / refractionIndex;
     }
+
 
     // (2) If the reflection dictated by Snell's law causes the transmission
     //     ray to stay in the origin medium then there is no refraction. This
     //     happens when the incident ray is at a "critical angle" with the
     //     normal.
+    float cosi = -dot(n, ray);
     float base = (
         1 - snellIndexRatio * snellIndexRatio *
-        (1 - projectionOntoNormalLength * projectionOntoNormalLength)
+        (1 - cosi * cosi)
     );
     if (base < 0) {
         return ray;
@@ -266,7 +268,7 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
         ),
         multiply(
             n,
-            snellIndexRatio * projectionOntoNormalLength - sqrtf(base)
+            snellIndexRatio * cosi - sqrtf(base)
         )
     ));
 }

@@ -1,5 +1,5 @@
 OBJECT_DEPS=main.o Scene.o Objects.o Vector.o Camera.o
-TEST_OBJECT_DEPS=tests/test_intersections.o Scene.o Objects.o Vector.o Camera.o
+TEST_OBJECT_DEPS=tests/tests.o Scene.o Objects.o Vector.o Camera.o
 
 # Linux (default)
 LDFLAGS=-lGL -lGLU -lglut
