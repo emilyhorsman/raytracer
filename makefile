@@ -1,4 +1,5 @@
 OBJECT_DEPS=main.o Scene.o Objects.o Vector.o Camera.o
+TEST_OBJECT_DEPS=tests/test_intersections.o Scene.o Objects.o Vector.o Camera.o
 
 # Linux (default)
 LDFLAGS=-lGL -lGLU -lglut
@@ -37,3 +38,10 @@ clean:
 
 docs:
 	$(DOXYGEN) Doxyfile
+
+
+build_tests: $(TEST_OBJECT_DEPS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o test $^
+
+test: build_tests
+	./test
