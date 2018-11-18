@@ -73,6 +73,7 @@ TEST_CASE("Ray-sphere intersection fails with ray direction missing object") {
 }
 
 
+/*
 TEST_CASE("Scene computes refraction direction correctly") {
     Scene scene(1, 1);
     Vec3f rayDirection = normalize(Vec3f({ 0, -sinf(M_PI / 6.0f), -1 }));
@@ -85,7 +86,7 @@ TEST_CASE("Scene computes refraction direction correctly") {
 }
 
 
-/*TEST_CASE("Scene computes refraction direction correctly") {
+TEST_CASE("Scene computes refraction direction correctly") {
     Scene scene(1, 1);
     Sphere s(zero, 0, 0, 0, Vec3f({ 0, 0, -1 }), 0.5f);
     Vec3f rayDirection = normalize(Vec3f({ 0, sinf(M_PI / 6.0f), -1 }));
@@ -97,4 +98,5 @@ TEST_CASE("Scene computes refraction direction correctly") {
     //Vec3f normal = normalize(Vec3f({ 0, sinf(M_PI / 3.0f), cosf(M_PI / 3.0f) }));
     Vec3f refraction = scene.refractionDir(rayDirection, normal, 1.1);
     printf("%f %f %f\n", REST(refraction));
-}*/
+}
+*/
