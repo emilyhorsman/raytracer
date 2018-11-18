@@ -44,7 +44,7 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({1, 0, 0}),
-            0.2f, 0, 0,
+            0, 1, 0,
             Vec3f({0, 0, -1}),
             0.5f
         )
@@ -198,7 +198,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         );
     }
 
-    if (depth < MAX_DEPTH && intersectionObject->mColor[2] == 0) {
+    /*if (depth < MAX_DEPTH) {
         Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f);
         float bias = dot(ray, normal) > 0 ? -1 : 1;
         Vec3f transmissionColor = trace(
@@ -210,7 +210,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color,
             multiply(transmissionColor, 0.9f)
         );
-    }
+    }*/
 
     return truncate(color, 1);
 }
