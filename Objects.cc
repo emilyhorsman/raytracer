@@ -50,10 +50,6 @@ bool Sphere::intersect(
     // This is the length of the projection of the ray-sphere line segment
     // onto the ray.
     float raySphereProjectionNorm = dot(raySphereSegment, rayDirection);
-    if (raySphereProjectionNorm < 0) {
-        return false;
-    }
-
     float discriminant = (
         dot(raySphereSegment, raySphereSegment) -
         raySphereProjectionNorm * raySphereProjectionNorm
