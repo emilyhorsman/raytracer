@@ -142,7 +142,10 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     Vec3f intersection = multiply(ray, intersectionScalar);
     Vec3f normal = intersectionObject->getNormalDir(intersection);
-    Vec3f color = Vec3f({ 0, 0, 0 });
+    Vec3f color = multiply(
+        intersectionObject->getColor(REST(intersection)),
+        intersectionObject->mAmbient
+    );
     float diffuse = intersectionObject->mDiffuse;
 
     if (diffuse > 0) {
@@ -155,27 +158,26 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             for (auto testObj : mObjects) {
                 // We need to check for just a smidge of bias to ensure we're not
                 // intersecting with testObj.
-                if (testObj->intersect(intersection, shadowRay, k) && k > 1e-4) {
+                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4) {
                     isShadow = true;
                     break;
                 }
             }
 
             if (!isShadow) {
+                color = add(
+                    color,
+                    multiply(
+                        intersectionObject->getColor(REST(intersection)),
+                        pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
+                    )
+                );
                 lambertIntensity += (
                     pointLight.mIntensity *
                     fmax(0, dot(shadowRay, normal))
                 );
             }
         }
-
-        color = add(
-            color,
-            multiply(
-                intersectionObject->getColor(REST(intersection)),
-                fmax(0, fmin(1, intersectionObject->mAmbient + diffuse * lambertIntensity))
-            )
-        );
     }
 
     if (intersectionObject->mSpecular > 0 && depth < MAX_DEPTH) {
