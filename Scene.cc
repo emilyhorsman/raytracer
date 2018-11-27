@@ -23,7 +23,7 @@
 #include "Vector.h"
 
 
-#define MAX_DEPTH 3
+#define MAX_DEPTH 5
 
 
 Scene::Scene(int width, int height)
@@ -35,46 +35,122 @@ Scene::Scene(int width, int height)
 {
     mPointLights.push_back(
         {
-            Vec3f({ 0, 1, -1 }),
+            Vec3f({ 0, 0.5f, -1 }),
             { 0, 1, 0, 1 },
             0.7
         }
     );
-
     mPointLights.push_back(
         {
-            Vec3f({ 2, 1, -1 }),
+            Vec3f({ -0.5f, 0, 0.5f }),
             { 0, 1, 0, 1 },
             0.7
         }
     );
+    mPointLights.push_back(
+        {
+            Vec3f({ -0.2f, -0.2f, 0 }),
+            { 0, 1, 0, 1 },
+            0.3
+        }
+    );
 
+
+    // Left
     mObjects.push_back(
         std::make_shared<Plane>(
-            Vec3f({ 0, 0, 1 }),
+            Vec3f({ 0, 0xb8 / 255.0f, 0x94 / 255.0f }),
             0.3f, 0.6f, 0,
             Vec3f({ -1, 0, 0 }),
             Vec3f({ 1, 0, -0.5f })
         )
     );
-
+    // Right
     mObjects.push_back(
         std::make_shared<Plane>(
+            Vec3f({ 1, 0xea / 255.0f, 0xa7 / 255.0f }),
+            0.3f, 0.6f, 0,
             Vec3f({ 1, 0, 0 }),
+            Vec3f({ -1, 0, -0.5f })
+        )
+    );
+    // Back
+    mObjects.push_back(
+        std::make_shared<Plane>(
+            Vec3f({ 0x55 / 255.0f, 0xef / 255.0f, 0xc4 / 255.0f }),
+            0.3f, 0.6f, 0,
+            Vec3f({ 0, 0, -3 }),
+            Vec3f({ 0, 0, 1 })
+        )
+    );
+    // Floor
+    mObjects.push_back(
+        std::make_shared<Plane>(
+            Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
             0.3f, 0.6f, 0.1f,
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
         )
     );
+    // Ceiling
+    mObjects.push_back(
+        std::make_shared<Plane>(
+            Vec3f({ 0xe1 / 255.0f, 0x70 / 255.0f, 0x55 / 255.0f }),
+            0.3f, 0.6f, 0.1f,
+            Vec3f({ 0, 0.35f, 0 }),
+            Vec3f({ 0, -1, -0.5f })
+        )
+    );
+
 
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({ 0.5f, 0.1f, 0.75f }),
-            0.05, 0.9, 0.05,
+            Vec3f({ 0x2d / 255.0f, 0x34 / 255.0f, 0x36 / 255.0f }),
+            0, 0, 1,
             Vec3f({ 0, 0, -1 }),
             0.25f
         )
     );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
+            0.1f, 0.9f, 0,
+            Vec3f({ -0.5f, -0.1f, -0.9f }),
+            0.15f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
+            0, 0, 1,
+            Vec3f({ 0.3f, -0.1f, -0.45f }),
+            0.05f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({ 0x6c / 255.0f, 0x5c / 255.0f, 0xe7 / 255.0f }),
+            0.1f, 0.8f, 0.1f,
+            Vec3f({ 0.1f, -0.2f, -0.4f }),
+            0.05f
+        )
+    );
+    for (int i = 0; i < 50; i++) {
+        float x = (float) (rand() % 1000) / 1000.0f - 0.6f;
+        float y = (float) (rand() % 1000) / 1000.0f - 0.5f;
+        float z = (float) (rand() % 1000) / -1000.0f;
+        float r = (float) (rand() % 1000) / 1000.0f;
+        float g = (float) (rand() % 1000) / 1000.0f;
+        float b = (float) (rand() % 1000) / 1000.0f;
+        mObjects.push_back(
+            std::make_shared<Sphere>(
+                Vec3f({ r, g, b }),
+                0.1f, 0.5f, 0.4f,
+                Vec3f({ x, y, z }),
+                0.01f
+            )
+        );
+    }
 }
 
 

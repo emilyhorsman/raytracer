@@ -155,6 +155,7 @@ Vec3f Plane::getNormalDir(Vec3f intersection) {
 
 
 Vec3f Plane::getColor(float x, float y, float z) {
+    return mColor;
     int k = 0;
     if (mNormal[1] != 0) {
         int checkerX = (int) (x * 10);

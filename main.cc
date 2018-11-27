@@ -7,11 +7,12 @@
 #  include <GL/glu.h>
 #  include <GL/freeglut.h>
 #endif
+#include <ctime>
 #include "Scene.h"
 
 
-#define CANVAS_WIDTH 600
-#define CANVAS_HEIGHT 500
+#define CANVAS_WIDTH 1200
+#define CANVAS_HEIGHT 1000
 
 
 Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -67,6 +68,8 @@ void handleKeyboard(unsigned char key, int _x, int _y) {
 
 
 int main(int argc, char **argv) {
+    srand(time(NULL));
+
     glutInit(&argc, argv);
     glutInitWindowSize(CANVAS_WIDTH, CANVAS_HEIGHT);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
