@@ -73,6 +73,24 @@ TEST_CASE("Ray-sphere intersection fails with ray direction missing object") {
 }
 
 
+TEST_CASE("Ray-plane intersection 1") {
+    Plane p(zero, 0, 0, 0, Vec3f({ 0, 0, -2 }), Vec3f({ 0, 0, 1 }));
+    float scalar;
+    REQUIRE(p.intersect(zero, Vec3f({ 0, 0, -1 }), scalar));
+    REQUIRE(scalar == 2);
+    REQUIRE(p.intersect(zero, Vec3f({ 1, 1, -1 }), scalar));
+    REQUIRE(p.intersect(zero, Vec3f({ 1, -1, -1 }), scalar));
+}
+
+
+TEST_CASE("Ray-plane intersection misses 1") {
+    Plane p(zero, 0, 0, 0, Vec3f({ 0, 0, -2 }), Vec3f({ 0, 0, 1 }));
+    float scalar;
+    REQUIRE(!p.intersect(zero, Vec3f({ 0, 0, 1 }), scalar));
+}
+
+
+
 /*
 TEST_CASE("Scene computes refraction direction correctly") {
     Scene scene(1, 1);
