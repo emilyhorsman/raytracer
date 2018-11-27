@@ -54,7 +54,7 @@ Scene::Scene(int width, int height)
             Vec3f({ 0, 0, 1 }),
             0.3f, 0.6f, 0,
             Vec3f({ -1, 0, 0 }),
-            Vec3f({ 1, 0, 0 })
+            Vec3f({ 1, 0, -0.5f })
         )
     );
 
