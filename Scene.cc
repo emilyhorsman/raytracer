@@ -35,26 +35,44 @@ Scene::Scene(int width, int height)
 {
     mPointLights.push_back(
         {
-            Vec3f({ 0, 1, 0 }),
+            Vec3f({ 0, 1, -1 }),
             { 0, 1, 0, 1 },
-            1
+            0.7
+        }
+    );
+
+    mPointLights.push_back(
+        {
+            Vec3f({ 2, 1, -1 }),
+            { 0, 1, 0, 1 },
+            0.7
         }
     );
 
     mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({1, 0, 0}),
-            0, 1, 0,
-            Vec3f({0, 0, -1}),
-            0.5f
+        std::make_shared<Plane>(
+            Vec3f({ 0, 0, 1 }),
+            0.3f, 0.6f, 0,
+            Vec3f({ -1, 0, 0 }),
+            Vec3f({ 1, 0, 0 })
         )
     );
+
     mObjects.push_back(
         std::make_shared<Plane>(
-            Vec3f({ 1, 1, 1 }),
-            0.3, 0.6, 0.1,
+            Vec3f({ 1, 0, 0 }),
+            0.3f, 0.6f, 0.1f,
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
+        )
+    );
+
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({ 0.5f, 0.1f, 0.75f }),
+            0.05, 0.9, 0.05,
+            Vec3f({ 0, 0, -1 }),
+            0.25f
         )
     );
 }
@@ -151,14 +169,23 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (diffuse > 0) {
         float lambertIntensity = 0;
         for (auto pointLight : mPointLights) {
-            Vec3f shadowRay = normalize(subtract(pointLight.mPosition, intersection));
+            Vec3f intersectionToLight = subtract(pointLight.mPosition, intersection);
+            float d = sqrtf(dot(intersectionToLight, intersectionToLight));
+            Vec3f shadowRay = normalize(intersectionToLight);
 
             float k;
             bool isShadow = false;
             for (auto testObj : mObjects) {
+                if (testObj == intersectionObject) {
+                    continue;
+                }
                 // We need to check for just a smidge of bias to ensure we're not
-                // intersecting with testObj.
-                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4) {
+                // intersecting with testObj. We also need to ensure that the
+                // distance to the object is less than the distance to the light,
+                // since the light could be between the two objects (especially
+                // with planes where there is usually an intersection with the
+                // ray).
+                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < d) {
                     isShadow = true;
                     break;
                 }
