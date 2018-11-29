@@ -4,6 +4,7 @@
  * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
  * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
  * [3] https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
+ * [4] https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
  */
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
@@ -228,6 +229,18 @@ bool isInside(Vec3f rayDirection, Vec3f intersectionNormal) {
 }
 
 
+// Based on [2] and [4].
+Vec3f computeReflectionDirection(Vec3f incomingRayDirection, Vec3f surfaceNormal) {
+    // Projection theorem tells us that any vector is the sum of its
+    // projections on to two orthogonal spaces.
+    return subtract(
+        incomingRayDirection,
+        // Project the incoming ray onto the intersection surface normal.
+        multiply(surfaceNormal, 2 * dot(incomingRayDirection, surfaceNormal))
+    );
+}
+
+
 Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar = INFINITY;
@@ -317,19 +330,11 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         }
     }
 
-
     if (intersectionObject->mSpecular > 0 && depth < MAX_DEPTH) {
-        // Reflection direction computation based on [2].
-        Vec3f reflectionDiretion = subtract(
-            ray,
-            multiply(
-                normal,
-                2 * dot(ray, normal)
-            )
-        );
+        Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
         Vec3f reflectionColor = trace(
-            add(intersection, multiply(normal, 1e-4)),
-            reflectionDiretion,
+            add(intersection, multiply(normal, 1e-5)),
+            reflectionDirection,
             depth + 1
         );
         float intensity = intersectionObject->mSpecular;
