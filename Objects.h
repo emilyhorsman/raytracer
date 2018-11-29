@@ -11,8 +11,9 @@ class SceneObject {
         float mAmbient;
         float mDiffuse;
         float mSpecular;
+        float mTransmission;
 
-        SceneObject(Vec3f color, float ambient, float diffuse, float specular);
+        SceneObject(Vec3f color, float ambient, float diffuse, float specular, float transmission);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -37,6 +38,7 @@ class Sphere : public SceneObject {
             float ambient,
             float diffuse,
             float specular,
+            float transmission,
             Vec3f origin,
             float radius
         );

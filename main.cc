@@ -11,8 +11,8 @@
 #include "Scene.h"
 
 
-#define CANVAS_WIDTH 1200
-#define CANVAS_HEIGHT 1000
+#define CANVAS_WIDTH 600
+#define CANVAS_HEIGHT 500
 
 
 Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);

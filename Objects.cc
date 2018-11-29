@@ -17,12 +17,13 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject(Vec3f color, float ambient, float diffuse, float specular)
+SceneObject::SceneObject(Vec3f color, float ambient, float diffuse, float specular, float transmission)
 : mColor(color)
 , mColorApproximation{ color[0], color[1], color[2], 1 }
 , mAmbient(ambient)
 , mDiffuse(diffuse)
 , mSpecular(specular)
+, mTransmission(transmission)
 {}
 
 
@@ -31,10 +32,11 @@ Sphere::Sphere(
     float ambient,
     float diffuse,
     float specular,
+    float transmission,
     Vec3f origin,
     float radius
 )
-: SceneObject(color, ambient, diffuse, specular)
+: SceneObject(color, ambient, diffuse, specular, transmission)
 , mOrigin(origin)
 , mRadius(radius)
 {}
@@ -101,7 +103,7 @@ Plane::Plane(
     Vec3f point,
     Vec3f normal
 )
-: SceneObject(color, ambient, diffuse, specular)
+: SceneObject(color, ambient, diffuse, specular, 0)
 , mPoint(point)
 , mNormal(normal)
 {}
@@ -155,7 +157,6 @@ Vec3f Plane::getNormalDir(Vec3f intersection) {
 
 
 Vec3f Plane::getColor(float x, float y, float z) {
-    return mColor;
     int k = 0;
     if (mNormal[1] != 0) {
         int checkerX = (int) (x * 10);

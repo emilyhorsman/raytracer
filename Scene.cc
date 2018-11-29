@@ -23,7 +23,7 @@
 #include "Vector.h"
 
 
-#define MAX_DEPTH 5
+#define MAX_DEPTH 3
 
 
 Scene::Scene(int width, int height)
@@ -33,29 +33,37 @@ Scene::Scene(int width, int height)
 , mWidth(width)
 , mHeight(height)
 {
-    mPointLights.push_back(
+    /*mPointLights.push_back(
         {
             Vec3f({ 0, 0.5f, -1 }),
             { 0, 1, 0, 1 },
             0.7
         }
-    );
+    );*/
     mPointLights.push_back(
         {
-            Vec3f({ -0.5f, 0, 0.5f }),
+            Vec3f({ -0.2f, -0.25f, 0.5f }),
             { 0, 1, 0, 1 },
-            0.7
+            1
         }
     );
     mPointLights.push_back(
+        {
+            Vec3f({ 0.2f, -0.25f, 0.5f }),
+            { 0, 1, 0, 1 },
+            1
+        }
+    );
+    /*mPointLights.push_back(
         {
             Vec3f({ -0.2f, -0.2f, 0 }),
             { 0, 1, 0, 1 },
             0.3
         }
-    );
+    );*/
 
 
+    /*
     // Left
     mObjects.push_back(
         std::make_shared<Plane>(
@@ -82,43 +90,44 @@ Scene::Scene(int width, int height)
             Vec3f({ 0, 0, -3 }),
             Vec3f({ 0, 0, 1 })
         )
-    );
+    );*/
     // Floor
     mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
-            0.3f, 0.6f, 0.1f,
+            0.2f, 0.8f, 0,
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
         )
     );
     // Ceiling
-    mObjects.push_back(
+    /*mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 0xe1 / 255.0f, 0x70 / 255.0f, 0x55 / 255.0f }),
             0.3f, 0.6f, 0.1f,
             Vec3f({ 0, 0.35f, 0 }),
             Vec3f({ 0, -1, -0.5f })
         )
-    );
+    );*/
 
 
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({ 0x2d / 255.0f, 0x34 / 255.0f, 0x36 / 255.0f }),
-            0, 0, 1,
-            Vec3f({ 0, 0, -1 }),
+            0, 0, 0.1f, 0.9f,
+            Vec3f({ 0, -0.25f, -1 }),
             0.25f
         )
     );
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
-            0.1f, 0.9f, 0,
-            Vec3f({ -0.5f, -0.1f, -0.9f }),
-            0.15f
+            0.1f, 0.9f, 0, 0,
+            Vec3f({ -0.2f, -0.2f, -1.5f }),
+            0.2f
         )
     );
+    /*
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
@@ -150,7 +159,7 @@ Scene::Scene(int width, int height)
                 0.01f
             )
         );
-    }
+    }*/
 }
 
 
@@ -211,6 +220,11 @@ void Scene::render() {
 
 Vec3f Scene::trace(Vec3f ray) {
     return trace(Vec3f({0, 0, 0}), ray, 0);
+}
+
+
+bool isInside(Vec3f rayDirection, Vec3f intersectionNormal) {
+    return dot(rayDirection, intersectionNormal) > 0;
 }
 
 
@@ -283,6 +297,27 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         }
     }
 
+    bool isTotalInternalReflection = false;
+    if (intersectionObject->mTransmission > 0 && depth < MAX_DEPTH) {
+        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f, isTotalInternalReflection);
+        if (!isTotalInternalReflection) {
+            float bias = 1 + 1e-4;
+            if (isInside(ray, normal)) {
+                bias *= -1;
+            }
+            Vec3f transmissionColor = trace(
+                add(intersection, multiply(normal, bias)),
+                transmissionDirection,
+                depth + 1
+            );
+            color = add(
+                color,
+                multiply(transmissionColor, intersectionObject->mTransmission)
+            );
+        }
+    }
+
+
     if (intersectionObject->mSpecular > 0 && depth < MAX_DEPTH) {
         // Reflection direction computation based on [2].
         Vec3f reflectionDiretion = subtract(
@@ -297,25 +332,15 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             reflectionDiretion,
             depth + 1
         );
+        float intensity = intersectionObject->mSpecular;
+        if (isTotalInternalReflection) {
+            intensity += intersectionObject->mTransmission;
+        }
         color = add(
             color,
-            multiply(reflectionColor, intersectionObject->mSpecular)
+            multiply(reflectionColor, intensity)
         );
     }
-
-    /*if (depth < MAX_DEPTH) {
-        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f);
-        float bias = dot(ray, normal) > 0 ? -1 : 1;
-        Vec3f transmissionColor = trace(
-            add(intersection, multiply(normal, bias * 1e-4)),
-            transmissionDirection,
-            depth + 1
-        );
-        color = add(
-            color,
-            multiply(transmissionColor, 0.9f)
-        );
-    }*/
 
     return truncate(color, 1);
 }
@@ -330,25 +355,31 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
  * not correctly handle a situation where a ray is travelling through object A
  * and then intersects object B before leaving object A. TODO #2
  *
+ * The transmission ray loses energy as it approaches the critical angle.
+ * Once it is parallel or beyond the critical angle, all the energy is
+ * exclusively in the incident ray.
+ *
  * Based on [3].
  */
-Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
+Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection) {
     // (1) Setup the reflection normal and ratio of refraction indices from
     //     Snell's law.
     float projectionOntoNormalLength = dot(ray, normal);
     bool isIncidentInsideIntersection = projectionOntoNormalLength > 0;
     Vec3f n = normal;
-    float snellIndexRatio;
+    // in / out
+    float relativeIndexOfRefraction;
     if (isIncidentInsideIntersection) {
         // We should be reflecting across a normal inside the object, so
         // re-orient the normal to be inside.
         n = multiply(n, -1);
+        projectionOntoNormalLength *= -1;
         // The ray is transiting from the object medium to air, thus
         // refractionIndex / 1.
-        snellIndexRatio = refractionIndex;
+        relativeIndexOfRefraction = refractionIndex;
     } else {
         // The ray is transiting from air to the object medium.
-        snellIndexRatio = 1.0f / refractionIndex;
+        relativeIndexOfRefraction = 1.0f / refractionIndex;
     }
 
 
@@ -356,10 +387,9 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
     //     ray to stay in the origin medium then there is no refraction. This
     //     happens when the incident ray is at a "critical angle" with the
     //     normal.
-    float cosi = -dot(n, ray);
     float base = (
-        1 - snellIndexRatio * snellIndexRatio *
-        (1 - cosi * cosi)
+        1 - relativeIndexOfRefraction * relativeIndexOfRefraction *
+        (1 - projectionOntoNormalLength * projectionOntoNormalLength)
     );
     if (base < 0) {
         return ray;
@@ -369,11 +399,11 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex) {
     return normalize(add(
         multiply(
             ray,
-            snellIndexRatio
+            relativeIndexOfRefraction
         ),
         multiply(
             n,
-            snellIndexRatio * cosi - sqrtf(base)
+            relativeIndexOfRefraction * projectionOntoNormalLength - sqrtf(base)
         )
     ));
 }

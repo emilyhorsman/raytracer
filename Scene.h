@@ -31,7 +31,7 @@ class Scene {
         void enableLightingGL();
 
         // TODO: This is only public for unit tests
-        Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex);
+        Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection);
 };
 
 
