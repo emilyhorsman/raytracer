@@ -377,17 +377,13 @@ Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTota
     float relativeIndexOfRefraction;
     float cosi = -dot(ray, normal);
     if (isInside(ray, normal)) {
-        printf("inside\n");
         relativeIndexOfRefraction = refractionIndex;
         cosi *= -1;
     } else {
-        printf("outside\n");
         relativeIndexOfRefraction = 1.0f / refractionIndex;
         normal = multiply(normal, -1);
     }
     assert(cosi > 0);
-
-    printf("normal: %f %f %f cosi: %f\n", REST(normal), cosi);
 
     float base = (
         1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)
