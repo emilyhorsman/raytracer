@@ -383,7 +383,7 @@ Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTota
         relativeIndexOfRefraction = 1.0f / refractionIndex;
         normal = multiply(normal, -1);
     }
-    assert(cosi > 0);
+    assert(cosi >= 0);
 
     float base = (
         1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)
