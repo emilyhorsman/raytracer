@@ -273,19 +273,15 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     float diffuse = intersectionObject->mDiffuse;
 
     if (diffuse > 0) {
-        float lambertIntensity = 0;
         for (auto pointLight : mPointLights) {
             Vec3f intersectionToLight = subtract(pointLight.mPosition, intersection);
             float d = sqrtf(dot(intersectionToLight, intersectionToLight));
             Vec3f shadowRay = normalize(intersectionToLight);
 
             float k;
-            bool isShadow = false;
+            float intensity = 1;
             for (auto testObj : mObjects) {
                 if (testObj == intersectionObject) {
-                    continue;
-                }
-                if (testObj->mTransmission > 0) {
                     continue;
                 }
                 // We need to check for just a smidge of bias to ensure we're not
@@ -295,24 +291,20 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 // with planes where there is usually an intersection with the
                 // ray).
                 if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < d) {
-                    isShadow = true;
-                    break;
+                    intensity -= 1 - fmax(0, testObj->mTransmission);
+                    if (intensity <= 1e-4) {
+                        break;
+                    }
                 }
             }
 
-            if (!isShadow) {
-                color = add(
-                    color,
-                    multiply(
-                        intersectionObject->getColor(REST(intersection)),
-                        pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
-                    )
-                );
-                lambertIntensity += (
-                    pointLight.mIntensity *
-                    fmax(0, dot(shadowRay, normal))
-                );
-            }
+            color = add(
+                color,
+                multiply(
+                    intersectionObject->getColor(REST(intersection)),
+                    intensity * pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
+                )
+            );
         }
     }
 
