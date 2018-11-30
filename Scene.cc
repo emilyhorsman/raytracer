@@ -24,7 +24,7 @@
 #include "Vector.h"
 
 
-#define MAX_DEPTH 4
+#define MAX_DEPTH 10
 
 
 Scene::Scene(int width, int height)

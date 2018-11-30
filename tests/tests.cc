@@ -152,11 +152,9 @@ TEST_CASE("Refraction at 75 degrees from normal through glass slab") {
 
 TEST_CASE("Refraction at 45 degrees from normal below glass slab") {
     Vec3f rayDirection = normalize(Vec3f({ 0, sinf(M_PI / 4.0f), -cosf(M_PI / 4.0f) }));
-    printf("ray direction: %f %f %f\n", REST(rayDirection));
     Vec3f normal({ 0, 0, 1 });
     bool isTotalInternalReflection;
     Vec3f refraction = refractionDir(rayDirection, normal, 1.5f, isTotalInternalReflection);
-    printf("RESULT: %f %f %f %d %f\n", REST(refraction), isTotalInternalReflection, norm(refraction));
     REQUIRE(refraction[0] == 0);
     REQUIRE(refraction[1] == Approx(sinf(M_PI / 6.0f)).margin(0.03f));
     REQUIRE(refraction[2] == Approx(-cosf(M_PI / 6.0f)).margin(0.03f));
@@ -188,6 +186,6 @@ TEST_CASE("Just before total internal reflection") {
     Vec3f rayDirection = normalize(Vec3f({ 0, sinf(M_PI / 4.5f), -cosf(M_PI / 4.5f) }));
     Vec3f normal({ 0, 0, -1 });
     bool isTotalInternalReflection;
-    Vec3f refraction = refractionDir(rayDirection, normal, 1.5f, isTotalInternalReflection);
+    refractionDir(rayDirection, normal, 1.5f, isTotalInternalReflection);
     REQUIRE(!isTotalInternalReflection);
 }
