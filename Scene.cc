@@ -264,7 +264,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         return Vec3f({ 0.3f, 0, 0 });
     }
 
-    Vec3f intersection = multiply(ray, intersectionScalar);
+    Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
     Vec3f color = multiply(
         intersectionObject->getColor(REST(intersection)),
