@@ -285,6 +285,9 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 if (testObj == intersectionObject) {
                     continue;
                 }
+                if (testObj->mTransmission > 0) {
+                    continue;
+                }
                 // We need to check for just a smidge of bias to ensure we're not
                 // intersecting with testObj. We also need to ensure that the
                 // distance to the object is less than the distance to the light,
@@ -315,16 +318,12 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     bool isTotalInternalReflection = false;
     if (intersectionObject->mTransmission > 0 && depth < MAX_DEPTH) {
-        Vec3f transmissionDirection = refractionDir(ray, normal, 1.5f, isTotalInternalReflection);
+        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f, isTotalInternalReflection);
         if (!isTotalInternalReflection) {
             // The surface normal points away from the sphere. We want the
             // bias to be in the direction of the transmission. If the
             // incoming ray is outside the sphere then the bias should be
             // negating the normal.
-            /*float bias = 1e-4;
-            if (!isInside(ray, normal)) {
-                bias *= -1;
-            }*/
             Vec3f transmissionColor = trace(
                 add(intersection, multiply(transmissionDirection, 1e-4)),
                 transmissionDirection,
