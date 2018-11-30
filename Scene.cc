@@ -24,7 +24,7 @@
 #include "Vector.h"
 
 
-#define MAX_DEPTH 3
+#define MAX_DEPTH 4
 
 
 Scene::Scene(int width, int height)
@@ -34,13 +34,13 @@ Scene::Scene(int width, int height)
 , mWidth(width)
 , mHeight(height)
 {
-    /*mPointLights.push_back(
+    mPointLights.push_back(
         {
-            Vec3f({ 0, 0.5f, -1 }),
+            Vec3f({ 0, 2, -1 }),
             { 0, 1, 0, 1 },
             0.7
         }
-    );*/
+    );
     mPointLights.push_back(
         {
             Vec3f({ -0.2f, -0.25f, 0.5f }),
@@ -96,7 +96,7 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
-            0.2f, 0.8f, 0,
+            0.4f, 0.6f, 0,
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
         )
@@ -115,16 +115,24 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({ 0x2d / 255.0f, 0x34 / 255.0f, 0x36 / 255.0f }),
-            0, 0, 0.1f, 0.9f,
-            Vec3f({ 0, -0.25f, -1 }),
-            0.25f
+            0, 0, 0.0f, 1.0f,
+            Vec3f({ 0, 0, -1.2f }),
+            0.4f
         )
     );
     mObjects.push_back(
         std::make_shared<Sphere>(
             Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
             0.1f, 0.9f, 0, 0,
-            Vec3f({ -0.2f, -0.2f, -1.5f }),
+            Vec3f({ -0.15f, -0.2f, -0.6f }),
+            0.1f
+        )
+    );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            Vec3f({ 0x6c / 255.0f, 0x5c / 255.0f, 0xe7 / 255.0f }),
+            0.1f, 0.9f, 0, 0,
+            Vec3f({ -0.45f, -0.2f, -1.6f }),
             0.2f
         )
     );
@@ -134,14 +142,6 @@ Scene::Scene(int width, int height)
             Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
             0, 0, 1,
             Vec3f({ 0.3f, -0.1f, -0.45f }),
-            0.05f
-        )
-    );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({ 0x6c / 255.0f, 0x5c / 255.0f, 0xe7 / 255.0f }),
-            0.1f, 0.8f, 0.1f,
-            Vec3f({ 0.1f, -0.2f, -0.4f }),
             0.05f
         )
     );
@@ -258,7 +258,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     if (!intersectionObject) {
-        return Vec3f({ 0, 0, 0 });
+        return Vec3f({ 0.3f, 0, 0 });
     }
 
     Vec3f intersection = multiply(ray, intersectionScalar);
@@ -312,14 +312,18 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     bool isTotalInternalReflection = false;
     if (intersectionObject->mTransmission > 0 && depth < MAX_DEPTH) {
-        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f, isTotalInternalReflection);
+        Vec3f transmissionDirection = refractionDir(ray, normal, 1.5f, isTotalInternalReflection);
         if (!isTotalInternalReflection) {
-            float bias = 1 + 1e-4;
-            if (isInside(ray, normal)) {
+            // The surface normal points away from the sphere. We want the
+            // bias to be in the direction of the transmission. If the
+            // incoming ray is outside the sphere then the bias should be
+            // negating the normal.
+            /*float bias = 1e-4;
+            if (!isInside(ray, normal)) {
                 bias *= -1;
-            }
+            }*/
             Vec3f transmissionColor = trace(
-                add(intersection, multiply(normal, bias)),
+                add(intersection, multiply(transmissionDirection, 1e-4)),
                 transmissionDirection,
                 depth + 1
             );
@@ -330,17 +334,17 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         }
     }
 
-    if (intersectionObject->mSpecular > 0 && depth < MAX_DEPTH) {
+    float intensity = intersectionObject->mSpecular;
+    if (isTotalInternalReflection) {
+        intensity += intersectionObject->mTransmission;
+    }
+    if (intensity > 0 && depth < MAX_DEPTH) {
         Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
         Vec3f reflectionColor = trace(
-            add(intersection, multiply(normal, 1e-5)),
+            add(intersection, multiply(reflectionDirection, 1e-5)),
             reflectionDirection,
             depth + 1
         );
-        float intensity = intersectionObject->mSpecular;
-        if (isTotalInternalReflection) {
-            intensity += intersectionObject->mTransmission;
-        }
         color = add(
             color,
             multiply(reflectionColor, intensity)
@@ -367,50 +371,29 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
  * Based on [3].
  */
 Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection) {
-    // (1) Setup the reflection normal and ratio of refraction indices from
-    //     Snell's law.
-    float projectionOntoNormalLength = dot(ray, normal);
-    bool isIncidentInsideIntersection = projectionOntoNormalLength > 0;
-    Vec3f n = normal;
-    // in / out
     float relativeIndexOfRefraction;
-    if (isIncidentInsideIntersection) {
-        // We should be reflecting across a normal inside the object, so
-        // re-orient the normal to be inside.
-        n = multiply(n, -1);
-        projectionOntoNormalLength *= -1;
-        // The ray is transiting from the object medium to air, thus
-        // refractionIndex / 1.
+    float cosi = dot(multiply(ray, -1), normal);
+    if (isInside(ray, normal)) {
         relativeIndexOfRefraction = refractionIndex;
+        cosi *= -1;
     } else {
-        // The ray is transiting from air to the object medium.
         relativeIndexOfRefraction = 1.0f / refractionIndex;
+        normal = multiply(normal, -1);
     }
+    assert(cosi > 0);
 
-
-    // (2) If the reflection dictated by Snell's law causes the transmission
-    //     ray to stay in the origin medium then there is no refraction. This
-    //     happens when the incident ray is at a "critical angle" with the
-    //     normal.
     float base = (
-        1 - relativeIndexOfRefraction * relativeIndexOfRefraction *
-        (1 - projectionOntoNormalLength * projectionOntoNormalLength)
+        1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)
     );
     if (base < 0) {
+        isTotalInternalReflection = true;
         return ray;
     }
 
-    // (3) Now we can actually compute the direction of the transmission ray.
-    return normalize(add(
-        multiply(
-            ray,
-            relativeIndexOfRefraction
-        ),
-        multiply(
-            n,
-            relativeIndexOfRefraction * projectionOntoNormalLength - sqrtf(base)
-        )
-    ));
+    return add(
+        multiply(ray, relativeIndexOfRefraction),
+        multiply(normal, relativeIndexOfRefraction * cosi - sqrtf(base))
+    );
 }
 
 
