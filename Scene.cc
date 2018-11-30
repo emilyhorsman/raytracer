@@ -242,6 +242,9 @@ Vec3f computeReflectionDirection(Vec3f incomingRayDirection, Vec3f surfaceNormal
 
 
 Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
+    if (fabs(norm(ray) - 1) > 1e-4) {
+        printf("norm: %f\n", norm(ray));
+    }
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar = INFINITY;
     float scalar;
@@ -370,17 +373,21 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
  *
  * Based on [3].
  */
-Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection) {
+Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection) {
     float relativeIndexOfRefraction;
-    float cosi = dot(multiply(ray, -1), normal);
+    float cosi = -dot(ray, normal);
     if (isInside(ray, normal)) {
+        printf("inside\n");
         relativeIndexOfRefraction = refractionIndex;
         cosi *= -1;
     } else {
+        printf("outside\n");
         relativeIndexOfRefraction = 1.0f / refractionIndex;
         normal = multiply(normal, -1);
     }
     assert(cosi > 0);
+
+    printf("normal: %f %f %f cosi: %f\n", REST(normal), cosi);
 
     float base = (
         1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)
@@ -392,7 +399,7 @@ Vec3f Scene::refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
 
     return add(
         multiply(ray, relativeIndexOfRefraction),
-        multiply(normal, relativeIndexOfRefraction * cosi - sqrtf(base))
+        multiply(normal, sqrtf(base) - relativeIndexOfRefraction * cosi)
     );
 }
 

@@ -8,6 +8,7 @@
 #include "Objects.h"
 #include "PointLight.h"
 
+Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection);
 
 class Scene {
     private:
@@ -29,9 +30,6 @@ class Scene {
         void drawObjectsGL();
         void setLightingParamsGL();
         void enableLightingGL();
-
-        // TODO: This is only public for unit tests
-        Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection);
 };
 
 
