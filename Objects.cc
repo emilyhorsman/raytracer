@@ -17,26 +17,13 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject(Vec3f color, float ambient, float diffuse, float specular, float transmission)
-: mColor(color)
-, mColorApproximation{ color[0], color[1], color[2], 1 }
-, mAmbient(ambient)
-, mDiffuse(diffuse)
-, mSpecular(specular)
-, mTransmission(transmission)
+SceneObject::SceneObject(Material material)
+: mMaterial(material)
 {}
 
 
-Sphere::Sphere(
-    Vec3f color,
-    float ambient,
-    float diffuse,
-    float specular,
-    float transmission,
-    Vec3f origin,
-    float radius
-)
-: SceneObject(color, ambient, diffuse, specular, transmission)
+Sphere::Sphere(Material material, Vec3f origin, float radius)
+: SceneObject(material)
 , mOrigin(origin)
 , mRadius(radius)
 {}
@@ -79,7 +66,6 @@ bool Sphere::intersect(
 void Sphere::drawGL() {
     glPushMatrix();
     glTranslatef(REST(mOrigin));
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, mColorApproximation);
     glutSolidSphere(mRadius, 20, 20);
     glPopMatrix();
 }
@@ -91,19 +77,12 @@ Vec3f Sphere::getNormalDir(Vec3f intersection) {
 
 
 Vec3f Sphere::getColor(float _x, float _y, float _z) {
-    return mColor;
+    return mMaterial.color;
 }
 
 
-Plane::Plane(
-    Vec3f color,
-    float ambient,
-    float diffuse,
-    float specular,
-    Vec3f point,
-    Vec3f normal
-)
-: SceneObject(color, ambient, diffuse, specular, 0)
+Plane::Plane(Material material, Vec3f point, Vec3f normal)
+: SceneObject(material)
 , mPoint(point)
 , mNormal(normal)
 {}
@@ -140,7 +119,6 @@ float Plane::computeY(float x, float z) {
 
 void Plane::drawGL() {
     glBegin(GL_QUADS);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, mColorApproximation);
     glNormal3fv(mNormal.begin());
     // TODO: We have to write one of each of these depending on the normal.
     glVertex3f(-5, computeY(-5, 5), 5);
@@ -157,6 +135,7 @@ Vec3f Plane::getNormalDir(Vec3f intersection) {
 
 
 Vec3f Plane::getColor(float x, float y, float z) {
+    return mMaterial.color;
     int k = 0;
     if (mNormal[1] != 0) {
         int checkerX = (int) (x * 10);

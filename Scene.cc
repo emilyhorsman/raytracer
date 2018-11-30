@@ -19,12 +19,13 @@
 #include <fstream>
 #include <memory>
 
+#include "Material.h"
 #include "Objects.h"
 #include "Scene.h"
 #include "Vector.h"
 
 
-#define MAX_DEPTH 10
+#define MAX_DEPTH 5
 
 
 Scene::Scene(int width, int height)
@@ -36,49 +37,42 @@ Scene::Scene(int width, int height)
 {
     mPointLights.push_back(
         {
-            Vec3f({ 0, 2, -1 }),
-            { 0, 1, 0, 1 },
-            0.7
-        }
-    );
-    mPointLights.push_back(
-        {
-            Vec3f({ -0.2f, -0.25f, 0.5f }),
+            Vec3f({ 0, -0.25f, 0.2f }),
             { 0, 1, 0, 1 },
             1
         }
     );
-    mPointLights.push_back(
-        {
-            Vec3f({ 0.2f, -0.25f, 0.5f }),
-            { 0, 1, 0, 1 },
-            1
-        }
-    );
-    /*mPointLights.push_back(
-        {
-            Vec3f({ -0.2f, -0.2f, 0 }),
-            { 0, 1, 0, 1 },
-            0.3
-        }
-    );*/
 
-
-    /*
     // Left
+    Material foo =
+        { .color = Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 })
+        , .ambient = 0.3f
+        , .diffuse = 0.7f
+        , .specular = 0
+        , .transmission = 0
+        , .refractiveIndex = 1
+        };
+    // Floor
     mObjects.push_back(
         std::make_shared<Plane>(
-            Vec3f({ 0, 0xb8 / 255.0f, 0x94 / 255.0f }),
-            0.3f, 0.6f, 0,
+            foo,
+            Vec3f({ 0, -0.5, 0 }),
+            Vec3f({ 0, 1, 0 })
+        )
+    );
+    /*
+    mObjects.push_back(
+        std::make_shared<Plane>(
+            foo,
             Vec3f({ -1, 0, 0 }),
             Vec3f({ 1, 0, -0.5f })
         )
-    );
+    );*/
     // Right
-    mObjects.push_back(
+    /*mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 1, 0xea / 255.0f, 0xa7 / 255.0f }),
-            0.3f, 0.6f, 0,
+            0.3f, 0.7f, 0,
             Vec3f({ 1, 0, 0 }),
             Vec3f({ -1, 0, -0.5f })
         )
@@ -87,80 +81,37 @@ Scene::Scene(int width, int height)
     mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 0x55 / 255.0f, 0xef / 255.0f, 0xc4 / 255.0f }),
-            0.3f, 0.6f, 0,
+            0.2f, 0.8f, 0,
             Vec3f({ 0, 0, -3 }),
             Vec3f({ 0, 0, 1 })
         )
-    );*/
-    // Floor
-    mObjects.push_back(
-        std::make_shared<Plane>(
-            Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
-            0.4f, 0.6f, 0,
-            Vec3f({ 0, -0.5, 0 }),
-            Vec3f({ 0, 1, 0 })
-        )
     );
     // Ceiling
-    /*mObjects.push_back(
+    mObjects.push_back(
         std::make_shared<Plane>(
             Vec3f({ 0xe1 / 255.0f, 0x70 / 255.0f, 0x55 / 255.0f }),
-            0.3f, 0.6f, 0.1f,
+            0.3f, 0.7f, 0.0f,
             Vec3f({ 0, 0.35f, 0 }),
             Vec3f({ 0, -1, -0.5f })
         )
-    );*/
+    );
+    */
 
-
+    Material bar =
+        { .color = Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f })
+        , .ambient = 0
+        , .diffuse = 0.2f
+        , .specular = 0
+        , .transmission = 0.8f
+        , .refractiveIndex = 2
+        };
     mObjects.push_back(
         std::make_shared<Sphere>(
-            Vec3f({ 0x2d / 255.0f, 0x34 / 255.0f, 0x36 / 255.0f }),
-            0, 0, 0.0f, 1.0f,
-            Vec3f({ 0, 0, -1.2f }),
-            0.4f
+            bar,
+            Vec3f({ 0, -0.2f, -1.5f }),
+            0.3f
         )
     );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
-            0.1f, 0.9f, 0, 0,
-            Vec3f({ -0.15f, -0.2f, -0.6f }),
-            0.1f
-        )
-    );
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({ 0x6c / 255.0f, 0x5c / 255.0f, 0xe7 / 255.0f }),
-            0.1f, 0.9f, 0, 0,
-            Vec3f({ -0.45f, -0.2f, -1.6f }),
-            0.2f
-        )
-    );
-    /*
-    mObjects.push_back(
-        std::make_shared<Sphere>(
-            Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
-            0, 0, 1,
-            Vec3f({ 0.3f, -0.1f, -0.45f }),
-            0.05f
-        )
-    );
-    for (int i = 0; i < 50; i++) {
-        float x = (float) (rand() % 1000) / 1000.0f - 0.6f;
-        float y = (float) (rand() % 1000) / 1000.0f - 0.5f;
-        float z = (float) (rand() % 1000) / -1000.0f;
-        float r = (float) (rand() % 1000) / 1000.0f;
-        float g = (float) (rand() % 1000) / 1000.0f;
-        float b = (float) (rand() % 1000) / 1000.0f;
-        mObjects.push_back(
-            std::make_shared<Sphere>(
-                Vec3f({ r, g, b }),
-                0.1f, 0.5f, 0.4f,
-                Vec3f({ x, y, z }),
-                0.01f
-            )
-        );
-    }*/
 }
 
 
@@ -261,16 +212,16 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     if (!intersectionObject) {
-        return Vec3f({ 0.3f, 0, 0 });
+        return Vec3f({ 0, 0, 0 });
     }
 
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
     Vec3f color = multiply(
         intersectionObject->getColor(REST(intersection)),
-        intersectionObject->mAmbient
+        intersectionObject->mMaterial.ambient
     );
-    float diffuse = intersectionObject->mDiffuse;
+    float diffuse = intersectionObject->mMaterial.diffuse;
 
     if (diffuse > 0) {
         for (auto pointLight : mPointLights) {
@@ -291,7 +242,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 // with planes where there is usually an intersection with the
                 // ray).
                 if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < d) {
-                    intensity -= 1 - fmax(0, testObj->mTransmission);
+                    intensity -= 1 - fmax(0, testObj->mMaterial.transmission);
                     if (intensity <= 1e-4) {
                         break;
                     }
@@ -309,8 +260,13 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     bool isTotalInternalReflection = false;
-    if (intersectionObject->mTransmission > 0 && depth < MAX_DEPTH) {
-        Vec3f transmissionDirection = refractionDir(ray, normal, 1.2f, isTotalInternalReflection);
+    if (intersectionObject->mMaterial.transmission > 0 && depth < MAX_DEPTH) {
+        Vec3f transmissionDirection = refractionDir(
+            ray,
+            normal,
+            intersectionObject->mMaterial.refractiveIndex,
+            isTotalInternalReflection
+        );
         if (!isTotalInternalReflection) {
             // The surface normal points away from the sphere. We want the
             // bias to be in the direction of the transmission. If the
@@ -323,14 +279,14 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             );
             color = add(
                 color,
-                multiply(transmissionColor, intersectionObject->mTransmission)
+                multiply(transmissionColor, intersectionObject->mMaterial.transmission)
             );
         }
     }
 
-    float intensity = intersectionObject->mSpecular;
+    float intensity = intersectionObject->mMaterial.specular;
     if (isTotalInternalReflection) {
-        intensity += intersectionObject->mTransmission;
+        intensity += intersectionObject->mMaterial.transmission;
     }
     if (intensity > 0 && depth < MAX_DEPTH) {
         Vec3f reflectionDirection = computeReflectionDirection(ray, normal);

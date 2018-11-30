@@ -1,19 +1,15 @@
 #ifndef _OBJECTS_H_
 #define _OBJECTS_H_
 
+#include "Material.h"
 #include "Vector.h"
 
 
 class SceneObject {
     public:
-        Vec3f mColor;
-        GLfloat mColorApproximation[4];
-        float mAmbient;
-        float mDiffuse;
-        float mSpecular;
-        float mTransmission;
+        Material mMaterial;
 
-        SceneObject(Vec3f color, float ambient, float diffuse, float specular, float transmission);
+        SceneObject(Material material);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -34,11 +30,7 @@ class Sphere : public SceneObject {
 
     public:
         Sphere(
-            Vec3f color,
-            float ambient,
-            float diffuse,
-            float specular,
-            float transmission,
+            Material material,
             Vec3f origin,
             float radius
         );
@@ -61,10 +53,7 @@ class Plane : public SceneObject {
 
     public:
         Plane(
-            Vec3f color,
-            float ambient,
-            float diffuse,
-            float specular,
+            Material material,
             Vec3f point,
             Vec3f normal
         );
