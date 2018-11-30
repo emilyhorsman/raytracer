@@ -2,6 +2,7 @@
  * References:
  *
  * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+ * [2] https://people.cs.clemson.edu/~dhouse/courses/405/notes/texture-maps.pdf
  */
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
@@ -20,6 +21,11 @@
 SceneObject::SceneObject(std::shared_ptr<Material> material)
 : mMaterial(material)
 {}
+
+
+Vec3f SceneObject::getColor(float x, float y, float z) {
+    return mMaterial->getColor(x, y, z);
+}
 
 
 Sphere::Sphere(std::shared_ptr<Material> material, Vec3f origin, float radius)
@@ -73,6 +79,19 @@ void Sphere::drawGL() {
 
 Vec3f Sphere::getNormalDir(Vec3f intersection) {
     return normalize(subtract(intersection, mOrigin));
+}
+
+
+Vec3f Sphere::getColor(float x, float y, float z) {
+    // Perform some texture mapping so that we can use the CheckerboardMaterial
+    // without it being distorted.
+    //
+    // Based on [2].
+    float theta = atan2(-(z - mOrigin[2]), x - mOrigin[0]);
+    float u = (theta + M_PI) / (2.0f * M_PI);
+    float phi = acos(-(y - mOrigin[1]) / mRadius);
+    float v = phi / M_PI;
+    return mMaterial->getColor(u, v, 0);
 }
 
 

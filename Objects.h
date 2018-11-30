@@ -19,6 +19,7 @@ class SceneObject {
         ) = 0;
         virtual void drawGL() = 0;
         virtual Vec3f getNormalDir(Vec3f intersection) = 0;
+        virtual Vec3f getColor(float x, float y, float z);
 };
 
 
@@ -40,6 +41,7 @@ class Sphere : public SceneObject {
         );
         void drawGL();
         Vec3f getNormalDir(Vec3f intersection);
+        Vec3f getColor(float x, float y, float z);
 };
 
 

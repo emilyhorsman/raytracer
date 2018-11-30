@@ -42,65 +42,36 @@ Scene::Scene(int width, int height)
             1
         }
     );
+    mPointLights.push_back(
+        {
+            Vec3f({ 0, 2, 0.2f }),
+            { 0, 0, 0, 0 },
+            0.7f
+        }
+    );
 
     // Floor
     mObjects.push_back(
         std::make_shared<Plane>(
             std::make_shared<CheckerboardMaterial>(
-                Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
-                Vec3f({ 1, 0, 0, }),
-                0.3f, 0.4f, 0.3f, 0, 1, 0.5f
+                Vec3f({ 0x63 / 255.0f, 0x63 / 255.0f, 0x63 / 255.0f }),
+                Vec3f({ 0xa2 / 255.0f, 0xab / 255.0f, 0x58 / 255.0f }),
+                0.3f, 0.7f, 0.1f, 0, 1, 0.5f
             ),
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
         )
     );
-    /*
-    mObjects.push_back(
-        std::make_shared<Plane>(
-            foo,
-            Vec3f({ -1, 0, 0 }),
-            Vec3f({ 1, 0, -0.5f })
-        )
-    );*/
-    // Right
-    /*mObjects.push_back(
-        std::make_shared<Plane>(
-            Vec3f({ 1, 0xea / 255.0f, 0xa7 / 255.0f }),
-            0.3f, 0.7f, 0,
-            Vec3f({ 1, 0, 0 }),
-            Vec3f({ -1, 0, -0.5f })
-        )
-    );
-    // Back
-    mObjects.push_back(
-        std::make_shared<Plane>(
-            Vec3f({ 0x55 / 255.0f, 0xef / 255.0f, 0xc4 / 255.0f }),
-            0.2f, 0.8f, 0,
-            Vec3f({ 0, 0, -3 }),
-            Vec3f({ 0, 0, 1 })
-        )
-    );
-    // Ceiling
-    mObjects.push_back(
-        std::make_shared<Plane>(
-            Vec3f({ 0xe1 / 255.0f, 0x70 / 255.0f, 0x55 / 255.0f }),
-            0.3f, 0.7f, 0.0f,
-            Vec3f({ 0, 0.35f, 0 }),
-            Vec3f({ 0, -1, -0.5f })
-        )
-    );
-    */
 
     mObjects.push_back(
         std::make_shared<Sphere>(
             std::make_shared<CheckerboardMaterial>(
-                Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
-                Vec3f({ 0, 0, 1 }),
-                0.2f, 0.8f, 0, 0, 2, 0.1f
+                Vec3f({ 1, 1, 1 }),
+                Vec3f({ 0, 0, 0 }),
+                0.2f, 0.8f, 0, 0, 2, 0.05f
             ),
-            Vec3f({ 0, -0.2f, -1.5f }),
-            0.3f
+            Vec3f({ 0, 1, -3.5f }),
+            1.5f
         )
     );
 }
@@ -209,7 +180,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
     Vec3f color = multiply(
-        intersectionObject->mMaterial->getColor(REST(intersection)),
+        intersectionObject->getColor(REST(intersection)),
         intersectionObject->mMaterial->ambient
     );
     float diffuse = intersectionObject->mMaterial->diffuse;
@@ -243,7 +214,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color = add(
                 color,
                 multiply(
-                    intersectionObject->mMaterial->getColor(REST(intersection)),
+                    intersectionObject->getColor(REST(intersection)),
                     intensity * pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
                 )
             );
