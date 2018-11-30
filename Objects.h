@@ -7,9 +7,9 @@
 
 class SceneObject {
     public:
-        Material mMaterial;
+        std::shared_ptr<Material> mMaterial;
 
-        SceneObject(Material material);
+        SceneObject(std::shared_ptr<Material> material);
         virtual ~SceneObject() = default;
 
         virtual bool intersect(
@@ -19,7 +19,6 @@ class SceneObject {
         ) = 0;
         virtual void drawGL() = 0;
         virtual Vec3f getNormalDir(Vec3f intersection) = 0;
-        virtual Vec3f getColor(float x, float y, float z) = 0;
 };
 
 
@@ -30,7 +29,7 @@ class Sphere : public SceneObject {
 
     public:
         Sphere(
-            Material material,
+            std::shared_ptr<Material> material,
             Vec3f origin,
             float radius
         );
@@ -41,7 +40,6 @@ class Sphere : public SceneObject {
         );
         void drawGL();
         Vec3f getNormalDir(Vec3f intersection);
-        Vec3f getColor(float x, float y, float z);
 };
 
 
@@ -53,7 +51,7 @@ class Plane : public SceneObject {
 
     public:
         Plane(
-            Material material,
+            std::shared_ptr<Material> material,
             Vec3f point,
             Vec3f normal
         );
@@ -64,7 +62,6 @@ class Plane : public SceneObject {
         );
         void drawGL();
         Vec3f getNormalDir(Vec3f intersection);
-        Vec3f getColor(float x, float y, float z);
 };
 
 

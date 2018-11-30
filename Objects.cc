@@ -17,12 +17,12 @@
 #include "Objects.h"
 
 
-SceneObject::SceneObject(Material material)
+SceneObject::SceneObject(std::shared_ptr<Material> material)
 : mMaterial(material)
 {}
 
 
-Sphere::Sphere(Material material, Vec3f origin, float radius)
+Sphere::Sphere(std::shared_ptr<Material> material, Vec3f origin, float radius)
 : SceneObject(material)
 , mOrigin(origin)
 , mRadius(radius)
@@ -76,12 +76,7 @@ Vec3f Sphere::getNormalDir(Vec3f intersection) {
 }
 
 
-Vec3f Sphere::getColor(float _x, float _y, float _z) {
-    return mMaterial.color;
-}
-
-
-Plane::Plane(Material material, Vec3f point, Vec3f normal)
+Plane::Plane(std::shared_ptr<Material> material, Vec3f point, Vec3f normal)
 : SceneObject(material)
 , mPoint(point)
 , mNormal(normal)
@@ -131,23 +126,4 @@ void Plane::drawGL() {
 
 Vec3f Plane::getNormalDir(Vec3f intersection) {
     return mNormal;
-}
-
-
-Vec3f Plane::getColor(float x, float y, float z) {
-    return mMaterial.color;
-    int k = 0;
-    if (mNormal[1] != 0) {
-        int checkerX = (int) (x * 10);
-        int checkerZ = (int) (z * 10);
-        k = checkerX + checkerZ;
-    } else if (mNormal[0] != 0) {
-        k = (int) (y) + (int) (z);
-    }
-
-    if (k % 2 == 0) {
-        return Vec3f({ 0.7, 0.7, 0.7 });
-    } else {
-        return Vec3f({ 1, 1, 1 });
-    }
 }

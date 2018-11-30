@@ -43,19 +43,14 @@ Scene::Scene(int width, int height)
         }
     );
 
-    // Left
-    Material foo =
-        { .color = Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 })
-        , .ambient = 0.3f
-        , .diffuse = 0.7f
-        , .specular = 0
-        , .transmission = 0
-        , .refractiveIndex = 1
-        };
     // Floor
     mObjects.push_back(
         std::make_shared<Plane>(
-            foo,
+            std::make_shared<CheckerboardMaterial>(
+                Vec3f({ 0x74 / 255.0f, 0xb9 / 255.0f, 1 }),
+                Vec3f({ 1, 0, 0, }),
+                0.3f, 0.4f, 0.3f, 0, 1, 0.5f
+            ),
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
         )
@@ -97,17 +92,13 @@ Scene::Scene(int width, int height)
     );
     */
 
-    Material bar =
-        { .color = Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f })
-        , .ambient = 0
-        , .diffuse = 0.2f
-        , .specular = 0
-        , .transmission = 0.8f
-        , .refractiveIndex = 2
-        };
     mObjects.push_back(
         std::make_shared<Sphere>(
-            bar,
+            std::make_shared<CheckerboardMaterial>(
+                Vec3f({ 1, 0x76 / 255.0f, 0x75 / 255.0f }),
+                Vec3f({ 0, 0, 1 }),
+                0.2f, 0.8f, 0, 0, 2, 0.1f
+            ),
             Vec3f({ 0, -0.2f, -1.5f }),
             0.3f
         )
@@ -218,10 +209,10 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
     Vec3f color = multiply(
-        intersectionObject->getColor(REST(intersection)),
-        intersectionObject->mMaterial.ambient
+        intersectionObject->mMaterial->getColor(REST(intersection)),
+        intersectionObject->mMaterial->ambient
     );
-    float diffuse = intersectionObject->mMaterial.diffuse;
+    float diffuse = intersectionObject->mMaterial->diffuse;
 
     if (diffuse > 0) {
         for (auto pointLight : mPointLights) {
@@ -242,7 +233,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 // with planes where there is usually an intersection with the
                 // ray).
                 if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < d) {
-                    intensity -= 1 - fmax(0, testObj->mMaterial.transmission);
+                    intensity -= 1 - fmax(0, testObj->mMaterial->transmission);
                     if (intensity <= 1e-4) {
                         break;
                     }
@@ -252,7 +243,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color = add(
                 color,
                 multiply(
-                    intersectionObject->getColor(REST(intersection)),
+                    intersectionObject->mMaterial->getColor(REST(intersection)),
                     intensity * pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
                 )
             );
@@ -260,11 +251,11 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     bool isTotalInternalReflection = false;
-    if (intersectionObject->mMaterial.transmission > 0 && depth < MAX_DEPTH) {
+    if (intersectionObject->mMaterial->transmission > 0 && depth < MAX_DEPTH) {
         Vec3f transmissionDirection = refractionDir(
             ray,
             normal,
-            intersectionObject->mMaterial.refractiveIndex,
+            intersectionObject->mMaterial->refractiveIndex,
             isTotalInternalReflection
         );
         if (!isTotalInternalReflection) {
@@ -279,14 +270,14 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             );
             color = add(
                 color,
-                multiply(transmissionColor, intersectionObject->mMaterial.transmission)
+                multiply(transmissionColor, intersectionObject->mMaterial->transmission)
             );
         }
     }
 
-    float intensity = intersectionObject->mMaterial.specular;
+    float intensity = intersectionObject->mMaterial->specular;
     if (isTotalInternalReflection) {
-        intensity += intersectionObject->mMaterial.transmission;
+        intensity += intersectionObject->mMaterial->transmission;
     }
     if (intensity > 0 && depth < MAX_DEPTH) {
         Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
