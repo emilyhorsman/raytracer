@@ -120,6 +120,8 @@ Scene::~Scene() {}
  * \param y Pixel space coordinate on the rendering plane.
  */
 Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS) {
+    // Loosely based on [1].
+    //
     // Normalize the raster space (mWidth by mHeight pixels) into
     // [0,1] with a 0.5 shift in raster space to center the pixels.
     // NDC assumes (0, 0) is the top-left point.
@@ -183,24 +185,17 @@ void Scene::render() {
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
-    std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
-    img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
-
-    // Loosely based on [1].
+    Vec3f image[mHeight][mWidth];
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
             Vec3f color({ 0, 0, 0 });
             for (int i = 0; i < mNoiseReduction; i++) {
                 color = add(color, renderPixel(aspectRatio, fovRatio, x, y));
             }
-            color = divide(color, (float) mNoiseReduction);
 
-            img << (unsigned char)(color[0] * 255) <<
-                   (unsigned char)(color[1] * 255) <<
-                   (unsigned char)(color[2] * 255);
+            image[y][x] = divide(color, (float) mNoiseReduction);
         }
     }
-    img.close();
 
     printf("Render time: %f seconds.\n", getSecondsSince(startTime));
     printf("Primary Rays: %d\n", mNumPrimaryRays);
@@ -208,6 +203,17 @@ void Scene::render() {
     printf("Specular Rays: %d\n", mNumSpecularRays);
     printf("Transmission Rays: %d\n", mNumTransmissionRays);
     printf("Intersections: %d\n", mNumIntersections);
+
+    std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
+    img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
+    for (int y = 0; y < mHeight; y++) {
+        for (int x = 0; x < mWidth; x++) {
+            img << (unsigned char)(image[y][x][0] * 255) <<
+                   (unsigned char)(image[y][x][1] * 255) <<
+                   (unsigned char)(image[y][x][2] * 255);
+        }
+    }
+    img.close();
 }
 
 
