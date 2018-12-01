@@ -15,7 +15,13 @@
 #define CANVAS_HEIGHT 500
 
 
-Scene scene(CANVAS_WIDTH, CANVAS_HEIGHT);
+Scene scene(
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    3,
+    4,
+    RANDOM
+);
 
 
 void handleDisplay() {

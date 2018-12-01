@@ -25,16 +25,15 @@
 #include "Vector.h"
 
 
-#define MAX_DEPTH 5
-#define SAMPLING 64
-
-
-Scene::Scene(int width, int height)
+Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasingMethod antiAliasMethod)
 : mObjects()
 , mPointLights()
 , mCamera()
 , mWidth(width)
 , mHeight(height)
+, mMaxDepth(maxDepth)
+, mAntiAliasing(antiAliasing)
+, mAntiAliasingMethod(antiAliasMethod)
 {
     mPointLights.push_back(
         {
@@ -117,30 +116,46 @@ void Scene::render() {
 
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
+
+    int s = (int) sqrtf(mAntiAliasing);
+
     // Loosely based on [1].
-    int s = (int) sqrtf(SAMPLING);
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
             Vec3f color({ 0, 0, 0 });
+            if (mAntiAliasing == 0) {
+                Vec3f ray = computeRay(
+                    aspectRatio,
+                    fovRatio,
+                    x, y,
+                    0.5f, 0.5f
+                );
+                color = add(color, trace(ray));
+            } else {
+                for (int ySampling = 0; ySampling < s; ySampling++) {
+                    for (int xSampling = 0; xSampling < s; xSampling++) {
+                        float xS = 0;
+                        float yS = 0;
+                        if (mAntiAliasingMethod == REGULAR) {
+                            xS = xSampling * (1.0f / s) - 0.5f;
+                            yS = ySampling * (1.0f / s) - 0.5f;
+                        } else if (mAntiAliasingMethod == RANDOM) {
+                            xS = (rand() % 1000) / 1000.0f - 0.5f;
+                            yS = (rand() % 1000) / 1000.0f - 0.5f;
+                        }
+                        Vec3f ray = computeRay(
+                            aspectRatio,
+                            fovRatio,
+                            x, y,
+                            xS, yS
+                        );
 
-            for (int ySampling = 0; ySampling < s; ySampling++) {
-                for (int xSampling = 0; xSampling < s; xSampling++) {
-                    float xS = xSampling * (1.0f / s) - 0.5f;
-                    float yS = ySampling * (1.0f / s) - 0.5f;
-                    //float xS = (rand() % 1000) / 1000.0f - 0.5f;
-                    //float yS = (rand() % 1000) / 1000.0f - 0.5f;
-                    Vec3f ray = computeRay(
-                        aspectRatio,
-                        fovRatio,
-                        x, y,
-                        xS, yS
-                    );
-
-                    color = add(color, trace(ray));
+                        color = add(color, trace(ray));
+                    }
                 }
-            }
 
-            color = divide(color, (float) SAMPLING);
+                color = divide(color, (float) mAntiAliasing);
+            }
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<
@@ -241,7 +256,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     bool isTotalInternalReflection = false;
-    if (intersectionObject->mMaterial->transmission > 0 && depth < MAX_DEPTH) {
+    if (intersectionObject->mMaterial->transmission > 0 && depth < mMaxDepth) {
         Vec3f transmissionDirection = refractionDir(
             ray,
             normal,
@@ -269,7 +284,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (isTotalInternalReflection) {
         intensity += intersectionObject->mMaterial->transmission;
     }
-    if (intensity > 0 && depth < MAX_DEPTH) {
+    if (intensity > 0 && depth < mMaxDepth) {
         Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
         Vec3f reflectionColor = trace(
             add(intersection, multiply(reflectionDirection, 1e-5)),
