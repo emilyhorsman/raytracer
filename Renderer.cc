@@ -1,3 +1,11 @@
+/**
+ * References:
+ *
+ * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
+ * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
+ * [3] https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
+ * [4] https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+ */
 #include <chrono>
 #include <cmath>
 #include <fstream>

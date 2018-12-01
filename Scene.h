@@ -10,6 +10,11 @@
 #include "Stats.h"
 
 
+/**
+ * Responsibilities:
+ *
+ *   - Maintaining references to the objects and lights
+ */
 class Scene {
     public:
         std::vector<std::shared_ptr<SceneObject>> mObjects;

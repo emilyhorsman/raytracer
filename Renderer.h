@@ -1,6 +1,7 @@
 #ifndef _RENDERER_H_
 #define _RENDERER_H_
 
+#include <memory>
 #include <thread>
 
 #include "Scene.h"
@@ -19,6 +20,13 @@ enum AntiAliasingMethod {
 };
 
 
+/**
+ * Responsibilities:
+ *
+ *   - Rendering settings (anti-aliasing, image dimensions, etc)
+ *   - Producing and writing an image
+ *   - Creating RenderThread instances
+ */
 class Renderer {
     public:
         Scene &mScene;
@@ -47,6 +55,15 @@ class Renderer {
 };
 
 
+/**
+ * Responsibilities:
+ *
+ *   - Rendering a portion of the image in a std::thread
+ *   - Keeping statistics on a rendering
+ *   - Ray tracing engine
+ *
+ * It'd be nice to further decouple this.
+ */
 class RenderThread {
     private:
         Vec3f computePrimaryRay(int x, int y, float xS, float yS);
