@@ -36,6 +36,11 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
 , mMaxDepth(maxDepth)
 , mAntiAliasing(antiAliasing)
 , mAntiAliasingMethod(antiAliasMethod)
+, mNumPrimaryRays(0)
+, mNumIncidentRays(0)
+, mNumSpecularRays(0)
+, mNumTransmissionRays(0)
+, mNumIntersections(0)
 {
     int s = (int) sqrtf(mAntiAliasing);
     if (s * s != antiAliasing) {
@@ -146,6 +151,7 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
             );
 
             color = add(color, trace(ray));
+            mNumPrimaryRays++;
         }
     }
 
@@ -178,6 +184,11 @@ void Scene::render() {
     img.close();
 
     printf("Render time: %f seconds.\n", getSecondsSince(startTime));
+    printf("Primary Rays: %d\n", mNumPrimaryRays);
+    printf("Incident Rays: %d\n", mNumIncidentRays);
+    printf("Specular Rays: %d\n", mNumSpecularRays);
+    printf("Transmission Rays: %d\n", mNumTransmissionRays);
+    printf("Intersections: %d\n", mNumIntersections);
 }
 
 
@@ -225,6 +236,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (!intersectionObject) {
         return Vec3f({ 0, 0, 0 });
     }
+    mNumIntersections++;
 
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
@@ -239,6 +251,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             Vec3f intersectionToLight = subtract(pointLight.mPosition, intersection);
             float d = sqrtf(dot(intersectionToLight, intersectionToLight));
             Vec3f shadowRay = normalize(intersectionToLight);
+            mNumIncidentRays++;
 
             float k;
             float intensity = 1;
@@ -292,6 +305,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 color,
                 multiply(transmissionColor, intersectionObject->mMaterial->transmission)
             );
+            mNumTransmissionRays++;
         }
     }
 
@@ -310,6 +324,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color,
             multiply(reflectionColor, intensity)
         );
+        mNumSpecularRays++;
     }
 
     return truncate(color, 1);

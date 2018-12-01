@@ -27,6 +27,11 @@ class Scene {
         int mMaxDepth;
         int mAntiAliasing;
         AntiAliasingMethod mAntiAliasingMethod;
+        int mNumPrimaryRays;
+        int mNumIncidentRays;
+        int mNumSpecularRays;
+        int mNumTransmissionRays;
+        int mNumIntersections;
 
         Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
