@@ -49,16 +49,9 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
 
     mPointLights.push_back(
         {
-            Vec3f({ 0, -0.25f, 0.2f }),
-            { 0, 1, 0, 1 },
-            1
-        }
-    );
-    mPointLights.push_back(
-        {
-            Vec3f({ 0, 2, 0.2f }),
+            Vec3f({ 0.3f, 1.5f, -1.2f }),
             { 0, 0, 0, 0 },
-            0.7f
+            2
         }
     );
 
@@ -82,10 +75,21 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
                 Vec3f({ 0, 0, 0 }),
                 0.2f, 0.8f, 0, 0, 2, 0.05f
             ),
-            Vec3f({ 0, 1, -3.5f }),
+            Vec3f({ 0.5f, 1, -3.5f }),
             1.5f
         )
     );
+    mObjects.push_back(
+        std::make_shared<Sphere>(
+            std::make_shared<Material>(
+                Vec3f({ 0, 0, 1 }),
+                0.2f, 0.8f, 0, 0, 2
+            ),
+            Vec3f({ -0.2f, 0, -1.2f }),
+            0.4f
+        )
+    );
+
 }
 
 
@@ -127,6 +131,7 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
             x, y,
             0.5f, 0.5f
         );
+        mNumPrimaryRays++;
         return trace(ray);
     }
 
@@ -174,7 +179,11 @@ void Scene::render() {
     // Loosely based on [1].
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
-            Vec3f color = renderPixel(aspectRatio, fovRatio, x, y);
+            Vec3f color({ 0, 0, 0 });
+            for (int i = 0; i < 200; i++) {
+                color = add(color, renderPixel(aspectRatio, fovRatio, x, y));
+            }
+            color = divide(color, 200.0f);
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<
@@ -248,7 +257,17 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     if (diffuse > 0) {
         for (auto pointLight : mPointLights) {
-            Vec3f intersectionToLight = subtract(pointLight.mPosition, intersection);
+            Vec3f intersectionToLight = subtract(
+                add(
+                    pointLight.mPosition,
+                    Vec3f({
+                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
+                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
+                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
+                    })
+                ),
+                intersection
+            );
             float d = sqrtf(dot(intersectionToLight, intersectionToLight));
             Vec3f shadowRay = normalize(intersectionToLight);
             mNumIncidentRays++;
