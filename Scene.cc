@@ -15,6 +15,7 @@
 #  include <GL/glu.h>
 #  include <GL/freeglut.h>
 #endif
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <memory>
@@ -22,6 +23,7 @@
 #include "Material.h"
 #include "Objects.h"
 #include "Scene.h"
+#include "Utility.h"
 #include "Vector.h"
 
 
@@ -150,12 +152,13 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
  * Renders a scene to a PPM image.
  */
 void Scene::render() {
+    TimePoint startTime = Clock::now();
+
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
-
 
     // Loosely based on [1].
     for (int y = 0; y < mHeight; y++) {
@@ -168,6 +171,8 @@ void Scene::render() {
         }
     }
     img.close();
+
+    printf("Render time: %f seconds.\n", getSecondsSince(startTime));
 }
 
 
