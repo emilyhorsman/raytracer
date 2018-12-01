@@ -8,6 +8,8 @@
 #  include <GL/freeglut.h>
 #endif
 #include <ctime>
+
+#include "Renderer.h"
 #include "Scene.h"
 
 
@@ -15,14 +17,17 @@
 #define CANVAS_HEIGHT 500
 
 
-Scene scene(
+Scene scene;
+Renderer renderer(
+    scene,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     3,
-    0,
+    4,
     RANDOM,
     true,
-    200
+    20,
+    12
 );
 
 
@@ -91,7 +96,7 @@ int main(int argc, char **argv) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    scene.render();
+    renderer.render();
 
     glutMainLoop();
 

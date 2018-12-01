@@ -29,31 +29,11 @@
 #include "Vector.h"
 
 
-Scene::Scene(
-    int width,
-    int height,
-    int maxDepth,
-    int antiAliasing,
-    AntiAliasingMethod antiAliasMethod,
-    bool enableSoftShadows,
-    int noiseReduction
-)
+Scene::Scene()
 : mObjects()
 , mPointLights()
 , mCamera()
-, mMaxDepth(maxDepth)
-, mAntiAliasing(antiAliasing)
-, mAntiAliasingMethod(antiAliasMethod)
-, mEnableSoftShadows(enableSoftShadows)
-, mWidth(width)
-, mHeight(height)
-, mNoiseReduction(noiseReduction)
 {
-    int s = (int) sqrtf(mAntiAliasing);
-    if (s * s != antiAliasing) {
-        printf("Warning! Anti-aliasing sample quantity must be a square number.\n");
-    }
-
     mPointLights.push_back(
         std::make_shared<PointLight>(
             Vec3f({ 0.3f, 1.5f, -1.2f }),
@@ -104,181 +84,19 @@ Scene::~Scene() {}
 
 
 /**
- * Computes the direction of a ray from the focal point to the (x, y)
- * pixel space coordinate on the rendering plane (the final image!).
- *
- * \param aspectRatio \f$\frac{\text{image width}}{\text{image height}}\f$
- * \param fovRatio This should be computed by
- *      \f$\tan\left(\frac{\text{fov}}{2}\right)\f$ where fov is the vertical
- *      field of view in radians. It is halved because the ray direction is
- *      computed with a right triangle formed from splitting the field of view
- *      in two halves.
- * \param x Pixel space coordinate on the rendering plane.
- * \param y Pixel space coordinate on the rendering plane.
- */
-Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS) {
-    // Loosely based on [1].
-    //
-    // Normalize the raster space (mWidth by mHeight pixels) into
-    // [0,1] with a 0.5 shift in raster space to center the pixels.
-    // NDC assumes (0, 0) is the top-left point.
-    float deviceCoordX = (x + xS) / (float) mWidth;
-    float deviceCoordY = (y + yS) / (float) mHeight;
-    // Centered (0, 0) origin with (1, 1) in the top-right.
-    float pixelX = (2 * deviceCoordX - 1) * fovRatio * aspectRatio;
-    float pixelY = (1 - 2 * deviceCoordY) * fovRatio;
-
-    return normalize(Vec3f({ pixelX, pixelY, -1 }));
-}
-
-
-Vec3f Scene::renderPixel(Stats &stats, float aspectRatio, float fovRatio, int x, int y) {
-    if (mAntiAliasing == 0) {
-        Vec3f ray = computeRay(
-            aspectRatio,
-            fovRatio,
-            x, y,
-            0.5f, 0.5f
-        );
-        stats.quantities[PRIMARY]++;
-        return trace(stats, ray);
-    }
-
-    int s = (int) sqrtf(mAntiAliasing);
-    Vec3f color({ 0, 0, 0 });
-    for (int ySampling = 0; ySampling < s; ySampling++) {
-        for (int xSampling = 0; xSampling < s; xSampling++) {
-            float xS = 0;
-            float yS = 0;
-            if (mAntiAliasingMethod == REGULAR) {
-                xS = xSampling * (1.0f / s) - 0.5f;
-                yS = ySampling * (1.0f / s) - 0.5f;
-            } else if (mAntiAliasingMethod == RANDOM) {
-                xS = (rand() % 1000) / 1000.0f - 0.5f;
-                yS = (rand() % 1000) / 1000.0f - 0.5f;
-            }
-            Vec3f ray = computeRay(
-                aspectRatio,
-                fovRatio,
-                x, y,
-                xS, yS
-            );
-
-            color = add(color, trace(stats, ray));
-            stats.quantities[PRIMARY]++;
-        }
-    }
-
-    return divide(color, (float) mAntiAliasing);
-}
-
-
-/**
- * Each thread is ``staggered'' across the image instead of each thread being
- * responsible for separate rows. I haven't done thorough testing on this but
- * my hypothesis is that this will ensure each thread does more equal amounts
- * of work, since the threads will have similar distributions of the image.
- * If a scene did not have much going on in its top half, then assigning the
- * top rows to some threads exclusively would waste potential concurrency.
- *
- * That is, if there are two threads A and B then the distribution of pixels
- * each renders on a 3x6 image will look like this:
- *
- *     ABABAB
- *     ABABAB
- *     ABABAB
- */
-void renderThread(Stats &stats, Vec3f *image, Scene *scene, const int startX, const int step, const float aspectRatio, const float fovRatio) {
-    TimePoint startTime = Clock::now();
-    Vec3f *p = image + startX;
-    stats.pixels = 0;
-    for (int y = 0; y < scene->mHeight; y++) {
-        for (int x = startX; x < scene->mWidth; x+= step, p += step) {
-            Vec3f color({ 0, 0, 0 });
-            for (int i = 0; i < scene->mNoiseReduction; i++) {
-                color = add(color, scene->renderPixel(stats, aspectRatio, fovRatio, x, y));
-            }
-
-            stats.pixels++;
-            *p = divide(color, (float) scene->mNoiseReduction);
-        }
-    }
-    stats.id = startX;
-    stats.timeSeconds = getSecondsSince(startTime);
-}
-
-
-/**
  * Renders a scene to a PPM image.
  */
 void Scene::render() {
-    float aspectRatio = (float) mWidth / (float) mHeight;
-    float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
-
-    Vec3f *image = new Vec3f[mHeight * mWidth];
-    int numThreads = 12;
-    std::vector<std::thread> threads(numThreads);
-    Stats threadStats[numThreads];
-    for (int i = 0; i < numThreads; i++) {
-        threads.at(i) = std::thread(
-            renderThread,
-            std::ref(threadStats[i]),
-            image,
-            this,
-            i,
-            numThreads,
-            aspectRatio,
-            fovRatio
-        );
-    }
-    for (auto &t : threads) {
-        t.join();
-    }
-    for (auto stats : threadStats) {
-        stats.print();
-    }
-
-    std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
-    img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
-    for (int i = 0; i < mWidth * mHeight; i++) {
-        img << (unsigned char)(image[i][0] * 255) <<
-               (unsigned char)(image[i][1] * 255) <<
-               (unsigned char)(image[i][2] * 255);
-    }
-    img.close();
-
-    delete [] image;
 }
 
-
-Vec3f Scene::trace(Stats &stats, Vec3f ray) {
-    return trace(stats, Vec3f({0, 0, 0}), ray, 0);
-}
-
-
-bool isInside(Vec3f rayDirection, Vec3f intersectionNormal) {
-    return dot(rayDirection, intersectionNormal) > 0;
-}
-
-
-// Based on [2] and [4].
-Vec3f computeReflectionDirection(Vec3f incomingRayDirection, Vec3f surfaceNormal) {
-    // Projection theorem tells us that any vector is the sum of its
-    // projections on to two orthogonal spaces.
-    return subtract(
-        incomingRayDirection,
-        // Project the incoming ray onto the intersection surface normal.
-        multiply(surfaceNormal, 2 * dot(incomingRayDirection, surfaceNormal))
-    );
-}
-
-
-Vec3f Scene::trace(Stats &stats, Vec3f origin, Vec3f ray, int depth) {
-    if (fabs(norm(ray) - 1) > 1e-4) {
-        printf("norm: %f\n", norm(ray));
-    }
-    std::shared_ptr<SceneObject> intersectionObject = NULL;
-    float intersectionScalar = INFINITY;
+bool Scene::getIntersection(
+    Vec3f origin,
+    Vec3f ray,
+    std::shared_ptr<SceneObject> &intersectionObject,
+    float &intersectionScalar
+) {
+    intersectionObject = NULL;
+    intersectionScalar = INFINITY;
     float scalar;
 
     for (auto obj : mObjects) {
@@ -292,144 +110,7 @@ Vec3f Scene::trace(Stats &stats, Vec3f origin, Vec3f ray, int depth) {
         }
     }
 
-    if (!intersectionObject) {
-        return Vec3f({ 0, 0, 0 });
-    }
-    stats.quantities[INTERSECTIONS]++;
-
-    Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
-    Vec3f normal = intersectionObject->getNormalDir(intersection);
-    Vec3f color = multiply(
-        intersectionObject->getColor(REST(intersection)),
-        intersectionObject->mMaterial->ambient
-    );
-    float diffuse = intersectionObject->mMaterial->diffuse;
-
-    if (diffuse > 0) {
-        for (auto pointLight : mPointLights) {
-            float distance;
-            Vec3f shadowRay = pointLight->direction(intersection, distance, mEnableSoftShadows);
-            stats.quantities[SHADOW]++;
-
-            float k;
-            float intensity = 1;
-            for (auto testObj : mObjects) {
-                if (testObj == intersectionObject) {
-                    continue;
-                }
-                // We need to check for just a smidge of bias to ensure we're not
-                // intersecting with testObj. We also need to ensure that the
-                // distance to the object is less than the distance to the light,
-                // since the light could be between the two objects (especially
-                // with planes where there is usually an intersection with the
-                // ray).
-                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < distance) {
-                    intensity -= 1 - fmax(0, testObj->mMaterial->transmission);
-                    if (intensity <= 1e-4) {
-                        break;
-                    }
-                }
-            }
-
-            color = add(
-                color,
-                multiply(
-                    intersectionObject->getColor(REST(intersection)),
-                    intensity * pointLight->mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
-                )
-            );
-        }
-    }
-
-    bool isTotalInternalReflection = false;
-    if (intersectionObject->mMaterial->transmission > 0 && depth < mMaxDepth) {
-        Vec3f transmissionDirection = refractionDir(
-            ray,
-            normal,
-            intersectionObject->mMaterial->refractiveIndex,
-            isTotalInternalReflection
-        );
-        if (!isTotalInternalReflection) {
-            // The surface normal points away from the sphere. We want the
-            // bias to be in the direction of the transmission. If the
-            // incoming ray is outside the sphere then the bias should be
-            // negating the normal.
-            Vec3f transmissionColor = trace(
-                stats,
-                add(intersection, multiply(transmissionDirection, 1e-4)),
-                transmissionDirection,
-                depth + 1
-            );
-            color = add(
-                color,
-                multiply(transmissionColor, intersectionObject->mMaterial->transmission)
-            );
-            stats.quantities[TRANSMISSION]++;
-        }
-    }
-
-    float intensity = intersectionObject->mMaterial->specular;
-    if (isTotalInternalReflection) {
-        intensity += intersectionObject->mMaterial->transmission;
-    }
-    if (intensity > 0 && depth < mMaxDepth) {
-        Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
-        Vec3f reflectionColor = trace(
-            stats,
-            add(intersection, multiply(reflectionDirection, 1e-5)),
-            reflectionDirection,
-            depth + 1
-        );
-        color = add(
-            color,
-            multiply(reflectionColor, intensity)
-        );
-        stats.quantities[SPECULAR]++;
-    }
-
-    return truncate(color, 1);
-}
-
-
-/**
- * Computes the direction of the transmission ray by computing the refraction
- * on the incident ray.
- *
- * Assumption: The interface is always between "air" and the medium of the
- * object the incident ray has intersected. This means that this function will
- * not correctly handle a situation where a ray is travelling through object A
- * and then intersects object B before leaving object A. TODO #2
- *
- * The transmission ray loses energy as it approaches the critical angle.
- * Once it is parallel or beyond the critical angle, all the energy is
- * exclusively in the incident ray.
- *
- * Based on [3].
- */
-Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection) {
-    float relativeIndexOfRefraction;
-    float cosi = -dot(ray, normal);
-    if (isInside(ray, normal)) {
-        relativeIndexOfRefraction = refractionIndex;
-        cosi *= -1;
-    } else {
-        relativeIndexOfRefraction = 1.0f / refractionIndex;
-        normal = multiply(normal, -1);
-    }
-    assert(cosi >= 0);
-
-    float base = (
-        1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)
-    );
-    if (base < 0) {
-        isTotalInternalReflection = true;
-        return ray;
-    }
-
-    return add(
-        multiply(ray, relativeIndexOfRefraction),
-        multiply(normal, sqrtf(base) - relativeIndexOfRefraction * cosi)
-    );
+    return intersectionObject != NULL;
 }
 
 

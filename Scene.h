@@ -9,50 +9,21 @@
 #include "PointLight.h"
 #include "Stats.h"
 
-Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection);
-
-
-enum AntiAliasingMethod {
-    REGULAR,
-    RANDOM
-};
-
 
 class Scene {
-    private:
+    public:
         std::vector<std::shared_ptr<SceneObject>> mObjects;
         std::vector<std::shared_ptr<PointLight>> mPointLights;
         Camera mCamera;
-        int mMaxDepth;
-        int mAntiAliasing;
-        AntiAliasingMethod mAntiAliasingMethod;
-        bool mEnableSoftShadows;
 
-        Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS);
-        Vec3f trace(Stats &stats, Vec3f origin, Vec3f ray, int depth);
-        Vec3f trace(Stats &stats, Vec3f ray);
-
-    public:
-        int mWidth;
-        int mHeight;
-        int mNoiseReduction;
-
-        Scene(
-            int width,
-            int height,
-            int maxDepth,
-            int antiAliasing,
-            AntiAliasingMethod antiAliasMethod,
-            bool enableSoftShadows,
-            int noiseReduction
-        );
+        Scene();
         ~Scene();
         void render();
         void setPerspectiveProjectionGL(int w, int h);
         void drawObjectsGL();
         void setLightingParamsGL();
         void enableLightingGL();
-        Vec3f renderPixel(Stats &stats, float aspectRatio, float fovRatio, int x, int y);
+        bool getIntersection(Vec3f origin, Vec3f ray, std::shared_ptr<SceneObject> &intersectionObject, float &intersectionScalar);
 };
 
 
