@@ -57,7 +57,7 @@ Scene::Scene(
     mPointLights.push_back(
         std::make_shared<PointLight>(
             Vec3f({ 0.3f, 1.5f, -1.2f }),
-            2,
+            1.8f,
             0.5f
         )
     );
@@ -68,7 +68,7 @@ Scene::Scene(
             std::make_shared<CheckerboardMaterial>(
                 Vec3f({ 0x63 / 255.0f, 0x63 / 255.0f, 0x63 / 255.0f }),
                 Vec3f({ 0xa2 / 255.0f, 0xab / 255.0f, 0x58 / 255.0f }),
-                0.3f, 0.7f, 0.1f, 0, 1, 0.5f
+                0.3f, 0.5f, 0.2f, 0, 1, 0.5f
             ),
             Vec3f({ 0, -0.5, 0 }),
             Vec3f({ 0, 1, 0 })
@@ -173,6 +173,21 @@ Vec3f Scene::renderPixel(Stats &stats, float aspectRatio, float fovRatio, int x,
 }
 
 
+/**
+ * Each thread is ``staggered'' across the image instead of each thread being
+ * responsible for separate rows. I haven't done thorough testing on this but
+ * my hypothesis is that this will ensure each thread does more equal amounts
+ * of work, since the threads will have similar distributions of the image.
+ * If a scene did not have much going on in its top half, then assigning the
+ * top rows to some threads exclusively would waste potential concurrency.
+ *
+ * That is, if there are two threads A and B then the distribution of pixels
+ * each renders on a 3x6 image will look like this:
+ *
+ *     ABABAB
+ *     ABABAB
+ *     ABABAB
+ */
 void renderThread(Stats &stats, Vec3f *image, Scene *scene, const int startX, const int step, const float aspectRatio, const float fovRatio) {
     TimePoint startTime = Clock::now();
     Vec3f *p = image + startX;
@@ -197,7 +212,6 @@ void renderThread(Stats &stats, Vec3f *image, Scene *scene, const int startX, co
  * Renders a scene to a PPM image.
  */
 void Scene::render() {
-
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
@@ -206,7 +220,16 @@ void Scene::render() {
     std::vector<std::thread> threads(numThreads);
     Stats threadStats[numThreads];
     for (int i = 0; i < numThreads; i++) {
-        threads.at(i) = std::thread(renderThread, std::ref(threadStats[i]), image, this, i, numThreads, aspectRatio, fovRatio);
+        threads.at(i) = std::thread(
+            renderThread,
+            std::ref(threadStats[i]),
+            image,
+            this,
+            i,
+            numThreads,
+            aspectRatio,
+            fovRatio
+        );
     }
     for (auto &t : threads) {
         t.join();

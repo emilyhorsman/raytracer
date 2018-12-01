@@ -22,7 +22,7 @@ Scene scene(
     0,
     RANDOM,
     true,
-    30
+    200
 );
 
 
