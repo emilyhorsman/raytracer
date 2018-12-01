@@ -7,17 +7,12 @@
 #  include <GL/glu.h>
 #  include <GL/freeglut.h>
 #endif
-#include <chrono>
 #include <cmath>
-#include <fstream>
 #include <memory>
-#include <thread>
 
 #include "Material.h"
 #include "Objects.h"
 #include "Scene.h"
-#include "Stats.h"
-#include "Utility.h"
 #include "Vector.h"
 
 

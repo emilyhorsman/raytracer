@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "Objects.h"
 #include "PointLight.h"
-#include "Stats.h"
 
 
 /**

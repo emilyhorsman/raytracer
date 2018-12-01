@@ -12,6 +12,7 @@
 #include <memory>
 #include <thread>
 
+#include "ImageFile.h"
 #include "Renderer.h"
 #include "Utility.h"
 #include "Vector.h"
@@ -60,15 +61,7 @@ void Renderer::render() {
         t->join();
     }
 
-    std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
-    img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
-    for (int i = 0; i < mWidth * mHeight; i++) {
-        img << (unsigned char)(image[i][0] * 255) <<
-               (unsigned char)(image[i][1] * 255) <<
-               (unsigned char)(image[i][2] * 255);
-    }
-    img.close();
-
+    writeImage("./Ray.ppm", mWidth, mHeight, image);
     delete [] image;
 }
 
