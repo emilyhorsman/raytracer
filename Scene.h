@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Objects.h"
 #include "PointLight.h"
+#include "Stats.h"
 
 Vec3f refractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool &isTotalInternalReflection);
 
@@ -26,15 +27,10 @@ class Scene {
         int mAntiAliasing;
         AntiAliasingMethod mAntiAliasingMethod;
         bool mEnableSoftShadows;
-        int mNumPrimaryRays;
-        int mNumIncidentRays;
-        int mNumSpecularRays;
-        int mNumTransmissionRays;
-        int mNumIntersections;
 
         Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS);
-        Vec3f trace(Vec3f origin, Vec3f ray, int depth);
-        Vec3f trace(Vec3f ray);
+        Vec3f trace(Stats &stats, Vec3f origin, Vec3f ray, int depth);
+        Vec3f trace(Stats &stats, Vec3f ray);
 
     public:
         int mWidth;
@@ -56,7 +52,7 @@ class Scene {
         void drawObjectsGL();
         void setLightingParamsGL();
         void enableLightingGL();
-        Vec3f renderPixel(float aspectRatio, float fovRatio, int x, int y);
+        Vec3f renderPixel(Stats &stats, float aspectRatio, float fovRatio, int x, int y);
 };
 
 

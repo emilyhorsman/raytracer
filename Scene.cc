@@ -24,6 +24,7 @@
 #include "Material.h"
 #include "Objects.h"
 #include "Scene.h"
+#include "Stats.h"
 #include "Utility.h"
 #include "Vector.h"
 
@@ -44,11 +45,6 @@ Scene::Scene(
 , mAntiAliasing(antiAliasing)
 , mAntiAliasingMethod(antiAliasMethod)
 , mEnableSoftShadows(enableSoftShadows)
-, mNumPrimaryRays(0)
-, mNumIncidentRays(0)
-, mNumSpecularRays(0)
-, mNumTransmissionRays(0)
-, mNumIntersections(0)
 , mWidth(width)
 , mHeight(height)
 , mNoiseReduction(noiseReduction)
@@ -136,7 +132,7 @@ Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y, float x
 }
 
 
-Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
+Vec3f Scene::renderPixel(Stats &stats, float aspectRatio, float fovRatio, int x, int y) {
     if (mAntiAliasing == 0) {
         Vec3f ray = computeRay(
             aspectRatio,
@@ -144,8 +140,8 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
             x, y,
             0.5f, 0.5f
         );
-        mNumPrimaryRays++;
-        return trace(ray);
+        stats.quantities[PRIMARY]++;
+        return trace(stats, ray);
     }
 
     int s = (int) sqrtf(mAntiAliasing);
@@ -168,8 +164,8 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
                 xS, yS
             );
 
-            color = add(color, trace(ray));
-            mNumPrimaryRays++;
+            color = add(color, trace(stats, ray));
+            stats.quantities[PRIMARY]++;
         }
     }
 
@@ -177,22 +173,23 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
 }
 
 
-void renderThread(Vec3f *image, Scene *scene, const int startX, const int step, const float aspectRatio, const float fovRatio) {
-    printf("Render thread %d started.\n", startX);
+void renderThread(Stats &stats, Vec3f *image, Scene *scene, const int startX, const int step, const float aspectRatio, const float fovRatio) {
+    TimePoint startTime = Clock::now();
     Vec3f *p = image + startX;
-    int count = 0;
+    stats.pixels = 0;
     for (int y = 0; y < scene->mHeight; y++) {
         for (int x = startX; x < scene->mWidth; x+= step, p += step) {
             Vec3f color({ 0, 0, 0 });
             for (int i = 0; i < scene->mNoiseReduction; i++) {
-                count++;
-                color = add(color, scene->renderPixel(aspectRatio, fovRatio, x, y));
+                color = add(color, scene->renderPixel(stats, aspectRatio, fovRatio, x, y));
             }
 
+            stats.pixels++;
             *p = divide(color, (float) scene->mNoiseReduction);
         }
     }
-    printf("Render thread %d completed %d pixels.\n", startX, count);
+    stats.id = startX;
+    stats.timeSeconds = getSecondsSince(startTime);
 }
 
 
@@ -200,7 +197,6 @@ void renderThread(Vec3f *image, Scene *scene, const int startX, const int step, 
  * Renders a scene to a PPM image.
  */
 void Scene::render() {
-    TimePoint startTime = Clock::now();
 
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
@@ -208,19 +204,16 @@ void Scene::render() {
     Vec3f *image = new Vec3f[mHeight * mWidth];
     int numThreads = 12;
     std::vector<std::thread> threads(numThreads);
+    Stats threadStats[numThreads];
     for (int i = 0; i < numThreads; i++) {
-        threads.at(i) = std::thread(renderThread, image, this, i, numThreads, aspectRatio, fovRatio);
+        threads.at(i) = std::thread(renderThread, std::ref(threadStats[i]), image, this, i, numThreads, aspectRatio, fovRatio);
     }
     for (auto &t : threads) {
         t.join();
     }
-
-    printf("Render time: %f seconds.\n", getSecondsSince(startTime));
-    printf("Primary Rays: %d\n", mNumPrimaryRays);
-    printf("Incident Rays: %d\n", mNumIncidentRays);
-    printf("Specular Rays: %d\n", mNumSpecularRays);
-    printf("Transmission Rays: %d\n", mNumTransmissionRays);
-    printf("Intersections: %d\n", mNumIntersections);
+    for (auto stats : threadStats) {
+        stats.print();
+    }
 
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
@@ -235,8 +228,8 @@ void Scene::render() {
 }
 
 
-Vec3f Scene::trace(Vec3f ray) {
-    return trace(Vec3f({0, 0, 0}), ray, 0);
+Vec3f Scene::trace(Stats &stats, Vec3f ray) {
+    return trace(stats, Vec3f({0, 0, 0}), ray, 0);
 }
 
 
@@ -257,7 +250,7 @@ Vec3f computeReflectionDirection(Vec3f incomingRayDirection, Vec3f surfaceNormal
 }
 
 
-Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
+Vec3f Scene::trace(Stats &stats, Vec3f origin, Vec3f ray, int depth) {
     if (fabs(norm(ray) - 1) > 1e-4) {
         printf("norm: %f\n", norm(ray));
     }
@@ -279,7 +272,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (!intersectionObject) {
         return Vec3f({ 0, 0, 0 });
     }
-    mNumIntersections++;
+    stats.quantities[INTERSECTIONS]++;
 
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
@@ -293,7 +286,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
         for (auto pointLight : mPointLights) {
             float distance;
             Vec3f shadowRay = pointLight->direction(intersection, distance, mEnableSoftShadows);
-            mNumIncidentRays++;
+            stats.quantities[SHADOW]++;
 
             float k;
             float intensity = 1;
@@ -339,6 +332,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             // incoming ray is outside the sphere then the bias should be
             // negating the normal.
             Vec3f transmissionColor = trace(
+                stats,
                 add(intersection, multiply(transmissionDirection, 1e-4)),
                 transmissionDirection,
                 depth + 1
@@ -347,7 +341,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 color,
                 multiply(transmissionColor, intersectionObject->mMaterial->transmission)
             );
-            mNumTransmissionRays++;
+            stats.quantities[TRANSMISSION]++;
         }
     }
 
@@ -358,6 +352,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
     if (intensity > 0 && depth < mMaxDepth) {
         Vec3f reflectionDirection = computeReflectionDirection(ray, normal);
         Vec3f reflectionColor = trace(
+            stats,
             add(intersection, multiply(reflectionDirection, 1e-5)),
             reflectionDirection,
             depth + 1
@@ -366,7 +361,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
             color,
             multiply(reflectionColor, intensity)
         );
-        mNumSpecularRays++;
+        stats.quantities[SPECULAR]++;
     }
 
     return truncate(color, 1);
