@@ -107,6 +107,45 @@ Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y, float x
 }
 
 
+Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
+    if (mAntiAliasing == 0) {
+        Vec3f ray = computeRay(
+            aspectRatio,
+            fovRatio,
+            x, y,
+            0.5f, 0.5f
+        );
+        return trace(ray);
+    }
+
+    int s = (int) sqrtf(mAntiAliasing);
+    Vec3f color({ 0, 0, 0 });
+    for (int ySampling = 0; ySampling < s; ySampling++) {
+        for (int xSampling = 0; xSampling < s; xSampling++) {
+            float xS = 0;
+            float yS = 0;
+            if (mAntiAliasingMethod == REGULAR) {
+                xS = xSampling * (1.0f / s) - 0.5f;
+                yS = ySampling * (1.0f / s) - 0.5f;
+            } else if (mAntiAliasingMethod == RANDOM) {
+                xS = (rand() % 1000) / 1000.0f - 0.5f;
+                yS = (rand() % 1000) / 1000.0f - 0.5f;
+            }
+            Vec3f ray = computeRay(
+                aspectRatio,
+                fovRatio,
+                x, y,
+                xS, yS
+            );
+
+            color = add(color, trace(ray));
+        }
+    }
+
+    return divide(color, (float) mAntiAliasing);
+}
+
+
 /**
  * Renders a scene to a PPM image.
  */
@@ -117,45 +156,11 @@ void Scene::render() {
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
 
-    int s = (int) sqrtf(mAntiAliasing);
 
     // Loosely based on [1].
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
-            Vec3f color({ 0, 0, 0 });
-            if (mAntiAliasing == 0) {
-                Vec3f ray = computeRay(
-                    aspectRatio,
-                    fovRatio,
-                    x, y,
-                    0.5f, 0.5f
-                );
-                color = add(color, trace(ray));
-            } else {
-                for (int ySampling = 0; ySampling < s; ySampling++) {
-                    for (int xSampling = 0; xSampling < s; xSampling++) {
-                        float xS = 0;
-                        float yS = 0;
-                        if (mAntiAliasingMethod == REGULAR) {
-                            xS = xSampling * (1.0f / s) - 0.5f;
-                            yS = ySampling * (1.0f / s) - 0.5f;
-                        } else if (mAntiAliasingMethod == RANDOM) {
-                            xS = (rand() % 1000) / 1000.0f - 0.5f;
-                            yS = (rand() % 1000) / 1000.0f - 0.5f;
-                        }
-                        Vec3f ray = computeRay(
-                            aspectRatio,
-                            fovRatio,
-                            x, y,
-                            xS, yS
-                        );
-
-                        color = add(color, trace(ray));
-                    }
-                }
-
-                color = divide(color, (float) mAntiAliasing);
-            }
+            Vec3f color = renderPixel(aspectRatio, fovRatio, x, y);
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<

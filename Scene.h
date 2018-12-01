@@ -31,6 +31,7 @@ class Scene {
         Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
         Vec3f trace(Vec3f ray);
+        Vec3f renderPixel(float aspectRatio, float fovRatio, int x, int y);
 
     public:
         Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasingMethod antiAliasMethod);
