@@ -20,13 +20,15 @@ enum AntiAliasingMethod {
 class Scene {
     private:
         std::vector<std::shared_ptr<SceneObject>> mObjects;
-        std::vector<PointLight> mPointLights;
+        std::vector<std::shared_ptr<PointLight>> mPointLights;
         Camera mCamera;
         int mWidth;
         int mHeight;
         int mMaxDepth;
         int mAntiAliasing;
         AntiAliasingMethod mAntiAliasingMethod;
+        bool mEnableSoftShadows;
+        int mNoiseReduction;
         int mNumPrimaryRays;
         int mNumIncidentRays;
         int mNumSpecularRays;
@@ -39,7 +41,15 @@ class Scene {
         Vec3f renderPixel(float aspectRatio, float fovRatio, int x, int y);
 
     public:
-        Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasingMethod antiAliasMethod);
+        Scene(
+            int width,
+            int height,
+            int maxDepth,
+            int antiAliasing,
+            AntiAliasingMethod antiAliasMethod,
+            bool enableSoftShadows,
+            int noiseReduction
+        );
         ~Scene();
         void render();
         void setPerspectiveProjectionGL(int w, int h);

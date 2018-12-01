@@ -4,14 +4,15 @@
 #include "Vector.h"
 
 
-struct PointLight {
-    Vec3f mPosition;
-    GLfloat mPositionGL[4];
-    float mIntensity;
+class PointLight {
+    public:
+        Vec3f mPosition;
+        float mIntensity;
+        float mRadius;
+
+        PointLight(Vec3f position, float intensity, float radius);
+        Vec3f direction(Vec3f intersection, float &distance, bool useSoftShadows);
 };
-
-
-typedef struct PointLight PointLight;
 
 
 #endif

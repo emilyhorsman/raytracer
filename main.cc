@@ -19,8 +19,10 @@ Scene scene(
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     3,
-    4,
-    RANDOM
+    0,
+    RANDOM,
+    true,
+    30
 );
 
 
@@ -85,9 +87,6 @@ int main(int argc, char **argv) {
     glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
 
-    glEnable(GL_LIGHTING);
-    scene.setLightingParamsGL();
-    scene.enableLightingGL();
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);

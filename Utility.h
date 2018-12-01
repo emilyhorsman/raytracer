@@ -3,6 +3,8 @@
 
 #include <chrono>
 
+#include "Vector.h"
+
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::time_point<Clock> TimePoint;
@@ -10,6 +12,10 @@ typedef std::chrono::milliseconds Milli;
 
 
 float getSecondsSince(TimePoint startTime);
+
+
+float randomFloat();
+Vec3f randomVec3f();
 
 
 #endif

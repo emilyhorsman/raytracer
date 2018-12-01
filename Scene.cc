@@ -27,7 +27,15 @@
 #include "Vector.h"
 
 
-Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasingMethod antiAliasMethod)
+Scene::Scene(
+    int width,
+    int height,
+    int maxDepth,
+    int antiAliasing,
+    AntiAliasingMethod antiAliasMethod,
+    bool enableSoftShadows,
+    int noiseReduction
+)
 : mObjects()
 , mPointLights()
 , mCamera()
@@ -36,6 +44,8 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
 , mMaxDepth(maxDepth)
 , mAntiAliasing(antiAliasing)
 , mAntiAliasingMethod(antiAliasMethod)
+, mEnableSoftShadows(enableSoftShadows)
+, mNoiseReduction(noiseReduction)
 , mNumPrimaryRays(0)
 , mNumIncidentRays(0)
 , mNumSpecularRays(0)
@@ -48,11 +58,11 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
     }
 
     mPointLights.push_back(
-        {
+        std::make_shared<PointLight>(
             Vec3f({ 0.3f, 1.5f, -1.2f }),
-            { 0, 0, 0, 0 },
-            2
-        }
+            2,
+            0.5f
+        )
     );
 
     // Floor
@@ -180,10 +190,10 @@ void Scene::render() {
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
             Vec3f color({ 0, 0, 0 });
-            for (int i = 0; i < 200; i++) {
+            for (int i = 0; i < mNoiseReduction; i++) {
                 color = add(color, renderPixel(aspectRatio, fovRatio, x, y));
             }
-            color = divide(color, 200.0f);
+            color = divide(color, (float) mNoiseReduction);
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<
@@ -257,19 +267,8 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
 
     if (diffuse > 0) {
         for (auto pointLight : mPointLights) {
-            Vec3f intersectionToLight = subtract(
-                add(
-                    pointLight.mPosition,
-                    Vec3f({
-                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
-                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
-                        0.5f * ((rand() % 1000) / 500.0f - 1.0f),
-                    })
-                ),
-                intersection
-            );
-            float d = sqrtf(dot(intersectionToLight, intersectionToLight));
-            Vec3f shadowRay = normalize(intersectionToLight);
+            float distance;
+            Vec3f shadowRay = pointLight->direction(intersection, distance, mEnableSoftShadows);
             mNumIncidentRays++;
 
             float k;
@@ -284,7 +283,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 // since the light could be between the two objects (especially
                 // with planes where there is usually an intersection with the
                 // ray).
-                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < d) {
+                if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < distance) {
                     intensity -= 1 - fmax(0, testObj->mMaterial->transmission);
                     if (intensity <= 1e-4) {
                         break;
@@ -296,7 +295,7 @@ Vec3f Scene::trace(Vec3f origin, Vec3f ray, int depth) {
                 color,
                 multiply(
                     intersectionObject->getColor(REST(intersection)),
-                    intensity * pointLight.mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
+                    intensity * pointLight->mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
                 )
             );
         }
@@ -409,23 +408,5 @@ void Scene::setPerspectiveProjectionGL(int w, int h) {
 void Scene::drawObjectsGL() {
     for (auto obj : mObjects) {
         obj->drawGL();
-    }
-}
-
-
-void Scene::setLightingParamsGL() {
-    for (int i = 0; i < std::min(8ul, mPointLights.size()); i++) {
-        glLightfv(
-            GL_LIGHT0 + i,
-            GL_POSITION,
-            mPointLights[i].mPositionGL
-        );
-    }
-}
-
-
-void Scene::enableLightingGL() {
-    for (int i = 0; i < std::min(8ul, mPointLights.size()); i++) {
-        glEnable(GL_LIGHT0 + i);
     }
 }
