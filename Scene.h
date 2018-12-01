@@ -22,13 +22,10 @@ class Scene {
         std::vector<std::shared_ptr<SceneObject>> mObjects;
         std::vector<std::shared_ptr<PointLight>> mPointLights;
         Camera mCamera;
-        int mWidth;
-        int mHeight;
         int mMaxDepth;
         int mAntiAliasing;
         AntiAliasingMethod mAntiAliasingMethod;
         bool mEnableSoftShadows;
-        int mNoiseReduction;
         int mNumPrimaryRays;
         int mNumIncidentRays;
         int mNumSpecularRays;
@@ -38,9 +35,12 @@ class Scene {
         Vec3f computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
         Vec3f trace(Vec3f ray);
-        Vec3f renderPixel(float aspectRatio, float fovRatio, int x, int y);
 
     public:
+        int mWidth;
+        int mHeight;
+        int mNoiseReduction;
+
         Scene(
             int width,
             int height,
@@ -56,6 +56,7 @@ class Scene {
         void drawObjectsGL();
         void setLightingParamsGL();
         void enableLightingGL();
+        Vec3f renderPixel(float aspectRatio, float fovRatio, int x, int y);
 };
 
 

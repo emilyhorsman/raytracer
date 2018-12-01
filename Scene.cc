@@ -19,6 +19,7 @@
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <thread>
 
 #include "Material.h"
 #include "Objects.h"
@@ -39,18 +40,18 @@ Scene::Scene(
 : mObjects()
 , mPointLights()
 , mCamera()
-, mWidth(width)
-, mHeight(height)
 , mMaxDepth(maxDepth)
 , mAntiAliasing(antiAliasing)
 , mAntiAliasingMethod(antiAliasMethod)
 , mEnableSoftShadows(enableSoftShadows)
-, mNoiseReduction(noiseReduction)
 , mNumPrimaryRays(0)
 , mNumIncidentRays(0)
 , mNumSpecularRays(0)
 , mNumTransmissionRays(0)
 , mNumIntersections(0)
+, mWidth(width)
+, mHeight(height)
+, mNoiseReduction(noiseReduction)
 {
     int s = (int) sqrtf(mAntiAliasing);
     if (s * s != antiAliasing) {
@@ -176,6 +177,25 @@ Vec3f Scene::renderPixel(float aspectRatio, float fovRatio, int x, int y) {
 }
 
 
+void renderThread(Vec3f *image, Scene *scene, const int startX, const int step, const float aspectRatio, const float fovRatio) {
+    printf("Render thread %d started.\n", startX);
+    Vec3f *p = image + startX;
+    int count = 0;
+    for (int y = 0; y < scene->mHeight; y++) {
+        for (int x = startX; x < scene->mWidth; x+= step, p += step) {
+            Vec3f color({ 0, 0, 0 });
+            for (int i = 0; i < scene->mNoiseReduction; i++) {
+                count++;
+                color = add(color, scene->renderPixel(aspectRatio, fovRatio, x, y));
+            }
+
+            *p = divide(color, (float) scene->mNoiseReduction);
+        }
+    }
+    printf("Render thread %d completed %d pixels.\n", startX, count);
+}
+
+
 /**
  * Renders a scene to a PPM image.
  */
@@ -185,16 +205,14 @@ void Scene::render() {
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mCamera.mFieldOfViewRadians / 2.0f);
 
-    Vec3f image[mHeight][mWidth];
-    for (int y = 0; y < mHeight; y++) {
-        for (int x = 0; x < mWidth; x++) {
-            Vec3f color({ 0, 0, 0 });
-            for (int i = 0; i < mNoiseReduction; i++) {
-                color = add(color, renderPixel(aspectRatio, fovRatio, x, y));
-            }
-
-            image[y][x] = divide(color, (float) mNoiseReduction);
-        }
+    Vec3f *image = new Vec3f[mHeight * mWidth];
+    int numThreads = 12;
+    std::vector<std::thread> threads(numThreads);
+    for (int i = 0; i < numThreads; i++) {
+        threads.at(i) = std::thread(renderThread, image, this, i, numThreads, aspectRatio, fovRatio);
+    }
+    for (auto &t : threads) {
+        t.join();
     }
 
     printf("Render time: %f seconds.\n", getSecondsSince(startTime));
@@ -206,14 +224,14 @@ void Scene::render() {
 
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
-    for (int y = 0; y < mHeight; y++) {
-        for (int x = 0; x < mWidth; x++) {
-            img << (unsigned char)(image[y][x][0] * 255) <<
-                   (unsigned char)(image[y][x][1] * 255) <<
-                   (unsigned char)(image[y][x][2] * 255);
-        }
+    for (int i = 0; i < mWidth * mHeight; i++) {
+        img << (unsigned char)(image[i][0] * 255) <<
+               (unsigned char)(image[i][1] * 255) <<
+               (unsigned char)(image[i][2] * 255);
     }
     img.close();
+
+    delete [] image;
 }
 
 
