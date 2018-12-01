@@ -76,6 +76,7 @@ Scene::~Scene() {}
 void Scene::render() {
 }
 
+
 bool Scene::getIntersection(
     Vec3f origin,
     Vec3f ray,

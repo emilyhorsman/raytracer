@@ -47,16 +47,18 @@ Renderer::Renderer(
 
 
 void Renderer::render() {
+    Vec3f *image = new Vec3f[mHeight * mWidth];
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
-    std::vector<std::shared_ptr<RenderThread>> threads;
 
-    Vec3f *image = new Vec3f[mHeight * mWidth];
+    std::vector<std::shared_ptr<RenderThread>> threads;
     for (int i = 0; i < mNumThreads; i++) {
         auto t = std::make_shared<RenderThread>(this, aspectRatio, fovRatio);
-        t->run(image, i, mNumThreads);
         threads.push_back(t);
+
+        t->run(image, i, mNumThreads);
     }
+
     for (auto t : threads) {
         t->join();
     }
@@ -110,6 +112,9 @@ Vec3f RenderThread::computePrimaryRay(int x, int y, float xS, float yS) {
 }
 
 
+/**
+ * std::thread can't accept an instance method so we need this wrapper.
+ */
 void threadBody(RenderThread *t, Vec3f *image, const int startX, const int step) {
     t->render(image, startX, step);
 }
@@ -117,6 +122,19 @@ void threadBody(RenderThread *t, Vec3f *image, const int startX, const int step)
 
 void RenderThread::run(Vec3f *image, const int startX, const int step) {
     mThread = std::make_shared<std::thread>(threadBody, this, image, startX, step);
+}
+
+
+/**
+ * Render a single pixel multiple times and return the average colour.
+ */
+Vec3f RenderThread::computePixelAverage(int x, int y) {
+    Vec3f color({ 0, 0, 0 });
+    for (int i = 0; i < mRenderer->mNoiseReduction; i++) {
+        color = add(color, renderPixel(x, y));
+    }
+
+    return divide(color, (float) mRenderer->mNoiseReduction);
 }
 
 
@@ -139,19 +157,27 @@ void RenderThread::render(Vec3f *image, const int startX, const int step) {
     TimePoint startTime = Clock::now();
     Vec3f *p = image + startX;
     mStats.pixels = 0;
+
     for (int y = 0; y < mRenderer->mHeight; y++) {
         for (int x = startX; x < mRenderer->mWidth; x+= step, p += step) {
-            Vec3f color({ 0, 0, 0 });
-            for (int i = 0; i < mRenderer->mNoiseReduction; i++) {
-                color = add(color, renderPixel(x, y));
-            }
-
             mStats.pixels++;
-            *p = divide(color, (float) mRenderer->mNoiseReduction);
+            *p = computePixelAverage(x, y);
         }
     }
+
     mStats.id = startX;
     mStats.timeSeconds = getSecondsSince(startTime);
+}
+
+
+void RenderThread::computeAntiAliasingSample(int samples, int x, int y, float &xS, float &yS) {
+    if (mRenderer->mAntiAliasingMethod == REGULAR) {
+        xS = x * (1.0f / samples) - 0.5f;
+        yS = y * (1.0f / samples) - 0.5f;
+    } else if (mRenderer->mAntiAliasingMethod == RANDOM) {
+        xS = (rand() % 1000) / 1000.0f - 0.5f;
+        yS = (rand() % 1000) / 1000.0f - 0.5f;
+    }
 }
 
 
@@ -168,13 +194,7 @@ Vec3f RenderThread::renderPixel(int x, int y) {
         for (int xSampling = 0; xSampling < s; xSampling++) {
             float xS = 0;
             float yS = 0;
-            if (mRenderer->mAntiAliasingMethod == REGULAR) {
-                xS = xSampling * (1.0f / s) - 0.5f;
-                yS = ySampling * (1.0f / s) - 0.5f;
-            } else if (mRenderer->mAntiAliasingMethod == RANDOM) {
-                xS = (rand() % 1000) / 1000.0f - 0.5f;
-                yS = (rand() % 1000) / 1000.0f - 0.5f;
-            }
+            computeAntiAliasingSample(s, xSampling, ySampling, xS, yS);
             Vec3f ray = computePrimaryRay(x, y, xS, yS);
 
             color = add(color, trace(ray));

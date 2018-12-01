@@ -70,6 +70,8 @@ class RenderThread {
         Vec3f renderPixel(int x, int y);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
         Vec3f trace(Vec3f ray);
+        Vec3f computePixelAverage(int x, int y);
+        void computeAntiAliasingSample(int samples, int x, int y, float &xS, float &yS);
 
     public:
         Renderer *mRenderer;
