@@ -26,6 +26,7 @@
 
 
 #define MAX_DEPTH 5
+#define SAMPLING 64
 
 
 Scene::Scene(int width, int height)
@@ -93,12 +94,12 @@ Scene::~Scene() {}
  * \param x Pixel space coordinate on the rendering plane.
  * \param y Pixel space coordinate on the rendering plane.
  */
-Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y) {
+Vec3f Scene::computeRay(float aspectRatio, float fovRatio, int x, int y, float xS, float yS) {
     // Normalize the raster space (mWidth by mHeight pixels) into
     // [0,1] with a 0.5 shift in raster space to center the pixels.
     // NDC assumes (0, 0) is the top-left point.
-    float deviceCoordX = (x + 0.5f) / (float) mWidth;
-    float deviceCoordY = (y + 0.5f) / (float) mHeight;
+    float deviceCoordX = (x + xS) / (float) mWidth;
+    float deviceCoordY = (y + yS) / (float) mHeight;
     // Centered (0, 0) origin with (1, 1) in the top-right.
     float pixelX = (2 * deviceCoordX - 1) * fovRatio * aspectRatio;
     float pixelY = (1 - 2 * deviceCoordY) * fovRatio;
@@ -117,11 +118,29 @@ void Scene::render() {
     std::ofstream img("./Ray.ppm", std::ios::out | std::ios::binary);
     img << "P6\n" << mWidth << " " << mHeight << "\n255\n";
     // Loosely based on [1].
+    int s = (int) sqrtf(SAMPLING);
     for (int y = 0; y < mHeight; y++) {
         for (int x = 0; x < mWidth; x++) {
-            Vec3f ray = computeRay(aspectRatio, fovRatio, x, y);
+            Vec3f color({ 0, 0, 0 });
 
-            Vec3f color = trace(ray);
+            for (int ySampling = 0; ySampling < s; ySampling++) {
+                for (int xSampling = 0; xSampling < s; xSampling++) {
+                    float xS = xSampling * (1.0f / s) - 0.5f;
+                    float yS = ySampling * (1.0f / s) - 0.5f;
+                    //float xS = (rand() % 1000) / 1000.0f - 0.5f;
+                    //float yS = (rand() % 1000) / 1000.0f - 0.5f;
+                    Vec3f ray = computeRay(
+                        aspectRatio,
+                        fovRatio,
+                        x, y,
+                        xS, yS
+                    );
+
+                    color = add(color, trace(ray));
+                }
+            }
+
+            color = divide(color, (float) SAMPLING);
 
             img << (unsigned char)(color[0] * 255) <<
                    (unsigned char)(color[1] * 255) <<
