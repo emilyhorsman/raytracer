@@ -19,7 +19,7 @@ Scene scene(
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     3,
-    4,
+    16,
     RANDOM
 );
 

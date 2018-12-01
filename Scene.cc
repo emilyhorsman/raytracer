@@ -37,6 +37,11 @@ Scene::Scene(int width, int height, int maxDepth, int antiAliasing, AntiAliasing
 , mAntiAliasing(antiAliasing)
 , mAntiAliasingMethod(antiAliasMethod)
 {
+    int s = (int) sqrtf(mAntiAliasing);
+    if (s * s != antiAliasing) {
+        printf("Warning! Anti-aliasing sample quantity must be a square number.\n");
+    }
+
     mPointLights.push_back(
         {
             Vec3f({ 0, -0.25f, 0.2f }),
