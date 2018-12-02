@@ -8,14 +8,21 @@
  */
 #include <chrono>
 #include <cmath>
-#include <fstream>
+#include <iostream>
+#include <iomanip>
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <thread>
+#include <utility>
 
 #include "ImageFile.h"
 #include "Renderer.h"
 #include "Utility.h"
 #include "Vector.h"
+
+
+#define WORK_BLOCK_SIZE 4
 
 
 Renderer::Renderer(
@@ -29,7 +36,10 @@ Renderer::Renderer(
     int noiseReduction,
     int numThreads
 )
-: mScene(scene)
+: mWorkQueue()
+, mQueueLock()
+, mCompletedRows(0)
+, mScene(scene)
 , mWidth(width)
 , mHeight(height)
 , mNoiseReduction(noiseReduction)
@@ -51,20 +61,67 @@ void Renderer::render() {
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
 
+    mQueueLock.lock();
+    for (int i = WORK_BLOCK_SIZE - 1, j = 0; i <= mHeight; j = i + 1, i += WORK_BLOCK_SIZE) {
+        mWorkQueue.push(std::make_pair(j, std::min(mHeight - 1, i)));
+    }
+    mQueueLock.unlock();
+
     std::vector<std::shared_ptr<RenderThread>> threads;
     for (int i = 0; i < mNumThreads; i++) {
         auto t = std::make_shared<RenderThread>(this, aspectRatio, fovRatio);
         threads.push_back(t);
 
-        t->run(image, i, mNumThreads);
+        t->run(image, i);
     }
 
     for (auto t : threads) {
         t->join();
     }
+    std::cout << std::endl << std::endl;
+    for (auto t : threads) {
+        t->mStats.print();
+    }
 
     writeImage("./Ray.ppm", mWidth, mHeight, image);
     delete [] image;
+}
+
+
+/**
+ * Each render thread gets a batch of WORK_BLOCK_SIZE rows to render at a time.
+ * This function returns true if there is work remaining in the queue after
+ * populating start and end if so.
+ */
+bool Renderer::getWork(int &start, int &end) {
+    mQueueLock.lock();
+    if (end != 0) {
+        mCompletedRows += (end + 1 - start);
+    }
+    if (mWorkQueue.empty()) {
+        printProgress();
+        mQueueLock.unlock();
+        return false;
+    }
+
+    auto t = mWorkQueue.front();
+    mWorkQueue.pop();
+    printProgress();
+    mQueueLock.unlock();
+
+    std::tie(start, end) = t;
+    return true;
+}
+
+
+void Renderer::printProgress() {
+    float progress = (mCompletedRows / (float) mHeight) * 100;
+    std::cout << std::right << std::setw(5) << std::setfill(' ') << progress << "% [";
+    for (int i = 0; i < 100; i++) {
+        std::cout << (i < progress ? "=" : " ");
+    }
+    std::cout << "]\r";
+    std::cout.flush();
 }
 
 
@@ -79,7 +136,6 @@ RenderThread::RenderThread(Renderer *renderer, float aspectRatio, float fovRatio
 
 void RenderThread::join() {
     mThread->join();
-    mStats.print();
 }
 
 
@@ -115,13 +171,13 @@ Vec3f RenderThread::computePrimaryRay(int x, int y, float xS, float yS) {
 /**
  * std::thread can't accept an instance method so we need this wrapper.
  */
-void threadBody(RenderThread *t, Vec3f *image, const int startX, const int step) {
-    t->render(image, startX, step);
+void threadBody(RenderThread *t, Vec3f *image, const int id) {
+    t->render(image, id);
 }
 
 
-void RenderThread::run(Vec3f *image, const int startX, const int step) {
-    mThread = std::make_shared<std::thread>(threadBody, this, image, startX, step);
+void RenderThread::run(Vec3f *image, const int id) {
+    mThread = std::make_shared<std::thread>(threadBody, this, image, id);
 }
 
 
@@ -138,35 +194,22 @@ Vec3f RenderThread::computePixelAverage(int x, int y) {
 }
 
 
-/**
- * Each thread is ``staggered'' across the image instead of each thread being
- * responsible for separate rows. I haven't done thorough testing on this but
- * my hypothesis is that this will ensure each thread does more equal amounts
- * of work, since the threads will have similar distributions of the image.
- * If a scene did not have much going on in its top half, then assigning the
- * top rows to some threads exclusively would waste potential concurrency.
- *
- * That is, if there are two threads A and B then the distribution of pixels
- * each renders on a 3x6 image will look like this:
- *
- *     ABABAB
- *     ABABAB
- *     ABABAB
- */
-void RenderThread::render(Vec3f *image, const int startX, const int step) {
+void RenderThread::render(Vec3f *image, const int id) {
     TimePoint startTime = Clock::now();
-    Vec3f *p = image + startX;
     mStats.pixels = 0;
+    mStats.id = id;
 
-    for (int y = 0; y < mRenderer->mHeight; y++) {
-        for (int x = startX; x < mRenderer->mWidth; x+= step, p += step) {
-            mStats.pixels++;
-            *p = computePixelAverage(x, y);
+    int start = 0;
+    int end = 0;
+    while (mRenderer->getWork(start, end)) {
+        for (int y = start; y <= end; y++) {
+            for (int x = 0; x < mRenderer->mWidth; x++) {
+                mStats.pixels++;
+                image[y * mRenderer->mWidth + x] = computePixelAverage(x, y);
+            }
         }
-        printf("Completed row %d.\n", y);
     }
 
-    mStats.id = startX;
     mStats.timeSeconds = getSecondsSince(startTime);
 }
 

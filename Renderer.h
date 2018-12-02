@@ -2,7 +2,10 @@
 #define _RENDERER_H_
 
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <thread>
+#include <utility>
 
 #include "Scene.h"
 #include "Stats.h"
@@ -28,6 +31,11 @@ enum AntiAliasingMethod {
  *   - Creating RenderThread instances
  */
 class Renderer {
+    private:
+        std::queue<std::pair<int, int>> mWorkQueue;
+        std::mutex mQueueLock;
+        int mCompletedRows;
+
     public:
         Scene &mScene;
         int mWidth;
@@ -50,6 +58,8 @@ class Renderer {
             int noiseReduction,
             int numThreads
         );
+        bool getWork(int &start, int &end);
+        void printProgress();
 
         void render();
 };
@@ -81,8 +91,8 @@ class RenderThread {
         std::shared_ptr<std::thread> mThread;
 
         RenderThread(Renderer *renderer, float aspectRatio, float fovRatio);
-        void run(Vec3f *image, const int startX, const int step);
-        void render(Vec3f *image, const int startX, const int step);
+        void run(Vec3f *image, const int id);
+        void render(Vec3f *image, const int id);
         void join();
 };
 
