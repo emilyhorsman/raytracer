@@ -62,7 +62,7 @@ void Renderer::render() {
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
 
     mQueueLock.lock();
-    for (int i = WORK_BLOCK_SIZE - 1, j = 0; i <= mHeight; j = i + 1, i += WORK_BLOCK_SIZE) {
+    for (int i = WORK_BLOCK_SIZE - 1, j = 0; j <= mHeight; j = i + 1, i += WORK_BLOCK_SIZE) {
         mWorkQueue.push(std::make_pair(j, std::min(mHeight - 1, i)));
     }
     mQueueLock.unlock();
