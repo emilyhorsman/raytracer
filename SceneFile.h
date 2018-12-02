@@ -7,6 +7,7 @@
 
 
 typedef std::map<std::string, std::vector<float>> MaterialProperties;
+typedef std::map<std::string, std::shared_ptr<Material>> Materials;
 
 
 bool loadSceneFile(Scene &scene, std::string file);

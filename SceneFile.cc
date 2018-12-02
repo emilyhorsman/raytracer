@@ -10,6 +10,7 @@
 #define ASSIGN_VEC3F(key, prop, map, i) i = map.find(key); if (i != map.end() && i->second.size() == 3) prop = mapToVec3f(i->second);
 #define ASSIGN_FLOAT(key, prop, map, i) i = map.find(key); if (i != map.end() && i->second.size() == 1) prop = i->second.at(0);
 
+
 Vec3f mapToVec3f(std::vector<float> v) {
     Vec3f a;
     std::copy_n(v.begin(), 3, a.begin());
@@ -37,12 +38,12 @@ std::shared_ptr<Material> getMaterial(MaterialProperties properties, std::string
         );
     }
 
-    ASSIGN_VEC3F("color", m->color, properties, i);
-    ASSIGN_FLOAT("ambient", m->ambient, properties, i);
-    ASSIGN_FLOAT("diffuse", m->diffuse, properties, i);
-    ASSIGN_FLOAT("specular", m->specular, properties, i);
-    ASSIGN_FLOAT("transmission", m->transmission, properties, i);
-    ASSIGN_FLOAT("refractiveIndex", m->refractiveIndex, properties, i);
+    ASSIGN_VEC3F("color", mat->color, properties, i);
+    ASSIGN_FLOAT("ambient", mat->ambient, properties, i);
+    ASSIGN_FLOAT("diffuse", mat->diffuse, properties, i);
+    ASSIGN_FLOAT("specular", mat->specular, properties, i);
+    ASSIGN_FLOAT("transmission", mat->transmission, properties, i);
+    ASSIGN_FLOAT("refractiveIndex", mat->refractiveIndex, properties, i);
 
     return mat;
 }
@@ -73,12 +74,12 @@ void parseProperty(std::string line, std::string &key, std::vector<float> &value
         if (s.empty()) {
             throw "Empty value.";
         }
-        value.push_back(std::stod(s));
+        value.push_back(std::stof(s));
     }
 }
 
 
-bool parseMaterial(std::istream &stream, std::string line, std::string materialType) {
+bool parseMaterial(Materials &materials, std::istream &stream, std::string line, std::string materialType) {
     if (line.rfind(materialType, 0) != 0) {
         return false;
     }
@@ -104,6 +105,7 @@ bool parseMaterial(std::istream &stream, std::string line, std::string materialT
     }
 
     auto mat = getMaterial(properties, materialType);
+    materials[materialId] = mat;
     return true;
 }
 
@@ -115,12 +117,13 @@ bool loadSceneFile(Scene &scene, std::string file) {
         return false;
     }
 
+    Materials materials;
     while (f.peek() != EOF) {
         std::string line;
         std::getline(f, line);
-        bool result = parseMaterial(f, line, "CheckerboardMaterial");
+        bool result = parseMaterial(materials, f, line, "CheckerboardMaterial");
         if (!result) {
-            result = parseMaterial(f, line, "Material");
+            result = parseMaterial(materials, f, line, "Material");
         }
     }
 
