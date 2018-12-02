@@ -205,6 +205,18 @@ std::shared_ptr<SceneObject> getObject(FloatProperties properties, Materials &ma
         ASSIGN_VEC3F("point", o->mPoint, properties, i);
         ASSIGN_VEC3F("normal", o->mNormal, properties, i);
         obj = o;
+    } else if (objectType == "Disk") {
+        auto o = std::make_shared<Disk>(
+            defaultMaterial,
+            Vec3f({ 0, -1, 0}),
+            Vec3f({ 0, 1, 0 }),
+            0.25f
+        );
+
+        ASSIGN_VEC3F("origin", o->mOrigin, properties, i);
+        ASSIGN_VEC3F("normal", o->mNormal, properties, i);
+        ASSIGN_FLOAT("radius", o->mRadius, properties, i);
+        obj = o;
     }
 
     auto m = materials.find(materialId);
@@ -270,6 +282,9 @@ bool loadSceneFile(Scene &scene, std::string file) {
         }
         if (!result) {
             result = parseObject(scene.mObjects, materials, f, line, "Sphere");
+        }
+        if (!result) {
+            result = parseObject(scene.mObjects, materials, f, line, "Disk");
         }
     }
 

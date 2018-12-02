@@ -67,4 +67,26 @@ class Plane : public SceneObject {
 };
 
 
+class Disk : public SceneObject {
+    public:
+        Vec3f mOrigin;
+        Vec3f mNormal;
+        float mRadius;
+
+        Disk(
+            std::shared_ptr<Material> material,
+            Vec3f origin,
+            Vec3f normal,
+            float radius
+        );
+        bool intersect(
+            Vec3f rayOrigin,
+            Vec3f rayDirection,
+            float &intersectionScalar
+        );
+        void drawGL();
+        Vec3f getNormalDir(Vec3f intersection);
+};
+
+
 #endif

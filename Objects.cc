@@ -98,7 +98,7 @@ Vec3f Sphere::getColor(float x, float y, float z) {
 Plane::Plane(std::shared_ptr<Material> material, Vec3f point, Vec3f normal)
 : SceneObject(material)
 , mPoint(point)
-, mNormal(normal)
+, mNormal(normalize(normal))
 {}
 
 
@@ -146,3 +146,44 @@ void Plane::drawGL() {
 Vec3f Plane::getNormalDir(Vec3f intersection) {
     return mNormal;
 }
+
+
+Disk::Disk(std::shared_ptr<Material> material, Vec3f origin, Vec3f normal, float radius)
+: SceneObject(material)
+, mOrigin(origin)
+, mNormal(normalize(normal))
+, mRadius(radius)
+{}
+
+
+Vec3f Disk::getNormalDir(Vec3f intersection) {
+    return mNormal;
+}
+
+
+bool Disk::intersect(
+    Vec3f rayOrigin,
+    Vec3f rayDirection,
+    float &intersectionScalar
+) {
+    float directionDotNormal = dot(mNormal, rayDirection);
+    if (fabs(directionDotNormal) <= 1e-6) {
+        return false;
+    }
+
+    intersectionScalar = (
+        dot(subtract(mOrigin, rayOrigin), mNormal) /
+        directionDotNormal
+    );
+
+    if (intersectionScalar <= 1e-6) {
+        return false;
+    }
+
+    Vec3f intersection = add(rayOrigin, multiply(rayDirection, intersectionScalar));
+    Vec3f difference = subtract(intersection, mOrigin);
+    return sqrtf(dot(difference, difference)) < mRadius;
+}
+
+
+void Disk::drawGL() {}
