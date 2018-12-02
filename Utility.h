@@ -1,6 +1,5 @@
 #ifndef _UTILITY_H_
 #define _UTILITY_H_
-
 #include <chrono>
 
 #include "Vector.h"
@@ -26,6 +25,9 @@ bool rayPlaneIntersection(
     Vec3f planeNormal,
     float &intersectionScalar
 );
+
+
+void renderImageToGL(int width, int height, Vec3f *image);
 
 
 #endif

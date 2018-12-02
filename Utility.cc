@@ -1,3 +1,12 @@
+#ifdef __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
+#  include <GLUT/glut.h>
+#else
+#  include <GL/gl.h>
+#  include <GL/glu.h>
+#  include <GL/freeglut.h>
+#endif
 #include <chrono>
 #include <cmath>
 
@@ -55,4 +64,16 @@ Vec3f randomDiskPoint(float z, float r) {
         R * sinf(theta),
         z
     });
+}
+
+
+void renderImageToGL(int width, int height, Vec3f *image) {
+    glBegin(GL_POINTS);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            glColor3fv(image[y * width + x].begin());
+            glVertex2i(x, height - y);
+        }
+    }
+    glEnd();
 }

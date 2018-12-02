@@ -46,24 +46,3 @@ bool Scene::getIntersection(
 
     return intersectionObject != NULL;
 }
-
-
-void Scene::setPerspectiveProjectionGL(int w, int h) {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(
-        mCamera.mFieldOfViewRadians * (180.0f / M_PI),
-        (float) w / (float) h,
-        0.1,
-        100
-    );
-
-    glMatrixMode(GL_MODELVIEW);
-}
-
-
-void Scene::drawObjectsGL() {
-    for (auto obj : mObjects) {
-        obj->drawGL();
-    }
-}

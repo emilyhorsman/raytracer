@@ -36,6 +36,7 @@ class Renderer {
         std::queue<std::pair<int, int>> mWorkQueue;
         std::mutex mQueueLock;
         int mCompletedRows;
+        Vec3f *mImage;
 
     public:
         Scene &mScene;
@@ -49,11 +50,13 @@ class Renderer {
         int mNumThreads;
 
         Renderer(Scene &scene);
+        ~Renderer();
         bool getWork(int &start, int &end);
         void printProgress();
         void printIntro(std::string file);
 
         void render();
+        void gl();
 };
 
 

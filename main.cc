@@ -20,23 +20,14 @@ Renderer renderer(scene);
 
 
 void handleDisplay() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
-    gluLookAt(
-        0, 0, 0,
-        0, 0, -1,
-        0, 1, 0
-    );
-
-    scene.drawObjectsGL();
-
+    renderer.gl();
     glFlush();
 }
 
 
-// TODO: For future raytracing rendering
-void setOrthographicProjection(int w, int h) {
+void handleReshape(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
@@ -56,11 +47,6 @@ void setOrthographicProjection(int w, int h) {
 }
 
 
-void handleReshape(int w, int h) {
-    scene.setPerspectiveProjectionGL(w, h);
-}
-
-
 void handleKeyboard(unsigned char key, int _x, int _y) {
     if (key == 'q' || key == 'Q') {
         exit(0);
@@ -76,21 +62,16 @@ int main(int argc, char **argv) {
     }
     loadSceneFile(renderer, scene, file);
     renderer.printIntro(file);
+    renderer.render();
 
     glutInit(&argc, argv);
     glutInitWindowSize(renderer.mWidth, renderer.mHeight);
-    glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
-    glutCreateWindow("Raytracer Sandbox (Real-time Approximation Mode)");
+    glutInitDisplayMode(GLUT_RGB);
+    glutCreateWindow("Raytracer Output");
 
     glutDisplayFunc(handleDisplay);
     glutKeyboardFunc(handleKeyboard);
     glutReshapeFunc(handleReshape);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-
-    renderer.render();
 
     glutMainLoop();
 

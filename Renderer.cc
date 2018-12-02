@@ -32,6 +32,7 @@ Renderer::Renderer(Scene &scene)
 : mWorkQueue()
 , mQueueLock()
 , mCompletedRows(0)
+, mImage(NULL)
 , mScene(scene)
 , mWidth(600)
 , mHeight(500)
@@ -49,8 +50,13 @@ Renderer::Renderer(Scene &scene)
 }
 
 
+Renderer::~Renderer() {
+    delete [] mImage;
+}
+
+
 void Renderer::render() {
-    Vec3f *image = new Vec3f[mHeight * mWidth];
+    mImage = new Vec3f[mHeight * mWidth];
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
 
@@ -65,7 +71,7 @@ void Renderer::render() {
         auto t = std::make_shared<RenderThread>(this, aspectRatio, fovRatio);
         threads.push_back(t);
 
-        t->run(image, i);
+        t->run(mImage, i);
     }
 
     for (auto t : threads) {
@@ -76,8 +82,12 @@ void Renderer::render() {
         t->mStats.print();
     }
 
-    writeImage("./Ray.ppm", mWidth, mHeight, image);
-    delete [] image;
+    writeImage("./Ray.ppm", mWidth, mHeight, mImage);
+}
+
+
+void Renderer::gl() {
+    renderImageToGL(mWidth, mHeight, mImage);
 }
 
 

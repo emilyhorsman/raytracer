@@ -21,11 +21,12 @@ class Scene {
         Camera mCamera;
 
         Scene();
-        void setPerspectiveProjectionGL(int w, int h);
-        void drawObjectsGL();
-        void setLightingParamsGL();
-        void enableLightingGL();
-        bool getIntersection(Vec3f origin, Vec3f ray, std::shared_ptr<SceneObject> &intersectionObject, float &intersectionScalar);
+        bool getIntersection(
+            Vec3f origin,
+            Vec3f ray,
+            std::shared_ptr<SceneObject> &intersectionObject,
+            float &intersectionScalar
+        );
 };
 
 
