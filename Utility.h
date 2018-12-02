@@ -16,6 +16,7 @@ float getSecondsSince(TimePoint startTime);
 
 float randomFloat();
 Vec3f randomVec3f();
+Vec3f randomDiskPoint(float z, float r);
 
 
 bool rayPlaneIntersection(

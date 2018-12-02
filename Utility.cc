@@ -16,6 +16,11 @@ float randomFloat() {
 }
 
 
+float randomUnitFloat() {
+    return (rand() % 100000) / 100000.0f;
+}
+
+
 Vec3f randomVec3f() {
     return Vec3f({ randomFloat(), randomFloat(), randomFloat() });
 }
@@ -39,4 +44,15 @@ bool rayPlaneIntersection(
     );
 
     return intersectionScalar >= 1e-6;
+}
+
+
+Vec3f randomDiskPoint(float z, float r) {
+    float R = r * sqrtf(randomUnitFloat());
+    float theta = randomUnitFloat() * 2.0f * M_PI;
+    return Vec3f({
+        R * cosf(theta),
+        R * sinf(theta),
+        z
+    });
 }

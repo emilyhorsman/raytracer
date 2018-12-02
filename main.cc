@@ -24,10 +24,10 @@ Renderer renderer(
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     3,
-    0,
-    RANDOM,
-    false,
-    10,
+    4,
+    REGULAR,
+    true,
+    50,
     12
 );
 

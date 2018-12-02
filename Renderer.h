@@ -76,10 +76,9 @@ class Renderer {
  */
 class RenderThread {
     private:
-        Vec3f computePrimaryRay(int x, int y, float xS, float yS);
+        void computePrimaryRay(int x, int y, float xS, float yS, Vec3f &direction, Vec3f &origin);
         Vec3f renderPixel(int x, int y);
         Vec3f trace(Vec3f origin, Vec3f ray, int depth);
-        Vec3f trace(Vec3f ray);
         Vec3f computePixelAverage(int x, int y);
         void computeAntiAliasingSample(int samples, int x, int y, float &xS, float &yS);
 

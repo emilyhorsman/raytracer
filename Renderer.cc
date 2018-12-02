@@ -5,6 +5,9 @@
  * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
  * [3] https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
  * [4] https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+ * [5] Chapter 10 of ``Ray Tracing from the Ground Up'' (Kevin Suffern)
+ * [6] http://cg.skeelogy.com/depth-of-field-using-raytracing/
+ * [7] https://stackoverflow.com/a/13686064/4909532
  */
 #include <chrono>
 #include <cmath>
@@ -157,7 +160,7 @@ void RenderThread::join() {
  * \param x Pixel space coordinate on the rendering plane.
  * \param y Pixel space coordinate on the rendering plane.
  */
-Vec3f RenderThread::computePrimaryRay(int x, int y, float xS, float yS) {
+void RenderThread::computePrimaryRay(int x, int y, float xS, float yS, Vec3f &direction, Vec3f &origin) {
     // Loosely based on [1].
     //
     // Normalize the raster space (mWidth by mHeight pixels) into
@@ -169,7 +172,41 @@ Vec3f RenderThread::computePrimaryRay(int x, int y, float xS, float yS) {
     float pixelX = (2 * deviceCoordX - 1) * mFovRatio * mAspectRatio;
     float pixelY = (1 - 2 * deviceCoordY) * mFovRatio;
 
-    return normalize(Vec3f({ pixelX, pixelY, -1 }));
+    // Depth of field based on [5][6][7]
+    // This is the pre-DOF ray that projects through the pixel in image space.
+    Vec3f ray({ pixelX, pixelY, -1 });
+    float t;
+    // There is an imaginary focal plane between the image plane and the
+    // objects in the scene. We know one point on the plane: the point the
+    // camera is looking at.
+    assert(rayPlaneIntersection(
+        mRenderer->mScene.mCamera.mPosition,
+        ray,
+        mRenderer->mScene.mCamera.mLookAt,
+        Vec3f({ 0, 0, -1 }),
+        t
+    ));
+    // Compute the point on the imaginary focal plane that this ray intersects.
+    Vec3f focalPoint = add(
+        mRenderer->mScene.mCamera.mPosition,
+        multiply(ray, t)
+    );
+
+    // Project the ray from the aperture point (which sits on the image plane)
+    // instead of from the eye. Derive the aperture point from the image point
+    // by ``jittering'' the point within a circular aperture.
+    //
+    // TODO: It'd be cool to have non-circular apertures since they provide
+    // different shapes of bokeh.
+    Vec3f imagePoint({ pixelX, pixelY, 0 });
+    Vec3f aperturePoint = add(
+        imagePoint,
+        randomDiskPoint(0, mRenderer->mScene.mCamera.mApertureRadius)
+    );
+
+    // Compute the actual primary ray!
+    direction = normalize(subtract(focalPoint, aperturePoint));
+    origin = aperturePoint;
 }
 
 
@@ -231,10 +268,11 @@ void RenderThread::computeAntiAliasingSample(int samples, int x, int y, float &x
 
 
 Vec3f RenderThread::renderPixel(int x, int y) {
+    Vec3f direction, origin;
     if (mRenderer->mAntiAliasing == 0) {
-        Vec3f ray = computePrimaryRay(x, y, 0.5f, 0.5f);
+        computePrimaryRay(x, y, 0.5f, 0.5f, direction, origin);
         mStats.quantities[PRIMARY]++;
-        return trace(ray);
+        return trace(origin, direction, 0);
     }
 
     int s = (int) sqrtf(mRenderer->mAntiAliasing);
@@ -244,19 +282,14 @@ Vec3f RenderThread::renderPixel(int x, int y) {
             float xS = 0;
             float yS = 0;
             computeAntiAliasingSample(s, xSampling, ySampling, xS, yS);
-            Vec3f ray = computePrimaryRay(x, y, xS, yS);
+            computePrimaryRay(x, y, xS, yS, direction, origin);
 
-            color = add(color, trace(ray));
+            color = add(color, trace(origin, direction, 0));
             mStats.quantities[PRIMARY]++;
         }
     }
 
     return divide(color, (float) mRenderer->mAntiAliasing);
-}
-
-
-Vec3f RenderThread::trace(Vec3f ray) {
-    return trace(Vec3f({0, 0, 0}), ray, 0);
 }
 
 
