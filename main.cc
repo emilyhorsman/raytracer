@@ -14,8 +14,8 @@
 #include "SceneFile.h"
 
 
-#define CANVAS_WIDTH 600
-#define CANVAS_HEIGHT 500
+#define CANVAS_WIDTH 1200
+#define CANVAS_HEIGHT 1000
 
 
 Scene scene;
@@ -24,10 +24,10 @@ Renderer renderer(
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     3,
-    0,
+    64,
     RANDOM,
-    false,
-    1,
+    true,
+    300,
     12
 );
 
