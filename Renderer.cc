@@ -163,6 +163,7 @@ void RenderThread::render(Vec3f *image, const int startX, const int step) {
             mStats.pixels++;
             *p = computePixelAverage(x, y);
         }
+        printf("Completed row %d.\n", y);
     }
 
     mStats.id = startX;

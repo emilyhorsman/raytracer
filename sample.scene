@@ -42,18 +42,18 @@ specular: 0.3
 Material ceiling
 color: 0.882353, 0.439216, 0.333333
 ambient: 0.2
-diffuse: 0.7
-specular: 0.1
+diffuse: 0.5
+specular: 0.3
 
 PointLight
 position: 0, 2, -1
-radius: 0.3
-intensity: 1.2
+radius: 0.1
+intensity: 1.5
 
 PointLight
 position: -0.5, -0.25, 0.5
-radius: 0.3
-intensity: 1.5
+radius: 0.1
+intensity: 1.6
 
 Plane
 material: leftWall
