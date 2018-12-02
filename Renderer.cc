@@ -135,7 +135,12 @@ RenderThread::RenderThread(Renderer *renderer, float aspectRatio, float fovRatio
 
 
 void RenderThread::join() {
-    mThread->join();
+    // This thread may not be an OS-level thread of execution and is thus not
+    // joinable. This occurs if the user specifies a greater number of threads
+    // than their system can parallelize.
+    if (mThread->joinable()) {
+        mThread->join();
+    }
 }
 
 
