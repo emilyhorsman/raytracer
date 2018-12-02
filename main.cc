@@ -26,8 +26,8 @@ Renderer renderer(
     3,
     4,
     REGULAR,
-    true,
-    50,
+    false,
+    1,
     12
 );
 
