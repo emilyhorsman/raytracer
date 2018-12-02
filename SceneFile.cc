@@ -3,6 +3,7 @@
 #include <map>
 
 #include "Material.h"
+#include "PointLight.h"
 #include "Scene.h"
 #include "SceneFile.h"
 
@@ -18,7 +19,7 @@ Vec3f mapToVec3f(std::vector<float> v) {
 }
 
 
-std::shared_ptr<Material> getMaterial(MaterialProperties properties, std::string materialType) {
+std::shared_ptr<Material> getMaterial(FloatProperties properties, std::string materialType) {
     std::shared_ptr<Material> mat = NULL;
     auto i = properties.begin();
     if (materialType == "CheckerboardMaterial") {
@@ -91,7 +92,7 @@ bool parseMaterial(Materials &materials, std::istream &stream, std::string line,
     std::cout << "Found " << materialType << " with ID " << materialId << std::endl;
 
     std::string row;
-    MaterialProperties properties;
+    FloatProperties properties;
     while (true) {
         std::getline(stream, row);
         if (row.empty()) {
@@ -105,7 +106,56 @@ bool parseMaterial(Materials &materials, std::istream &stream, std::string line,
     }
 
     auto mat = getMaterial(properties, materialType);
+    if (mat == NULL) {
+        return false;
+    }
+
     materials[materialId] = mat;
+    return true;
+}
+
+
+std::shared_ptr<PointLight> getLight(FloatProperties properties) {
+    std::shared_ptr<PointLight> light = std::make_shared<PointLight>(
+        Vec3f({ 0, 0, 1 }),
+        0.1,
+        0
+    );
+    auto i = properties.begin();
+
+    ASSIGN_VEC3F("position", light->mPosition, properties, i);
+    ASSIGN_FLOAT("intensity", light->mIntensity, properties, i);
+    ASSIGN_FLOAT("radius", light->mRadius, properties, i);
+
+    return light;
+}
+
+
+bool parseLight(std::vector<std::shared_ptr<PointLight>> &lights, std::istream &stream, std::string line, std::string lightType) {
+    if (line != lightType) {
+        return false;
+    }
+
+    std::string row;
+    FloatProperties properties;
+    while (true) {
+        std::getline(stream, row);
+        if (row.empty()) {
+            break;
+        }
+
+        std::string key;
+        std::vector<float> value;
+        parseProperty(row, key, value);
+        properties[key] = value;
+    }
+
+    auto light = getLight(properties);
+    if (light == NULL) {
+        return false;
+    }
+
+    lights.push_back(light);
     return true;
 }
 
@@ -124,6 +174,9 @@ bool loadSceneFile(Scene &scene, std::string file) {
         bool result = parseMaterial(materials, f, line, "CheckerboardMaterial");
         if (!result) {
             result = parseMaterial(materials, f, line, "Material");
+        }
+        if (!result) {
+            result = parseLight(scene.mPointLights, f, line, "PointLight");
         }
     }
 

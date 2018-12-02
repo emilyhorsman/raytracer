@@ -6,7 +6,7 @@
 #include "Scene.h"
 
 
-typedef std::map<std::string, std::vector<float>> MaterialProperties;
+typedef std::map<std::string, std::vector<float>> FloatProperties;
 typedef std::map<std::string, std::shared_ptr<Material>> Materials;
 
 
