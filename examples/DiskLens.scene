@@ -1,16 +1,20 @@
+Renderer
+width: 600
+height: 500
+maxDepth: 3
+antiAliasing: 4
+samplingMethod: regular
+useSoftShadows: true
+iterations: 30
+threads: 12
+outputFile: ./examples/DiskLens.ppm
+
 CheckerboardMaterial checkersBW
 color: 1, 1, 1
 odd: 0, 0, 0
 ambient: 0.2
 diffuse: 0.8
 grain: 0.05
-
-CheckerboardMaterial checkersBWLarge
-color: 1, 1, 1
-odd: 0, 0, 0
-ambient: 0.2
-diffuse: 0.8
-grain: 0.5
 
 Material leftWall
 color: 0, 0.721569, 0.580392
@@ -89,18 +93,6 @@ origin: 1, -0.5, -1.6
 radius: 0.5
 material: mirror
 
-Material glass
-ambient: 0
-diffuse: 0
-specular: 0
-transmission: 1
-refractiveIndex: 1.5
-
-Sphere
-origin: -0.2, -0.25, -0.6
-radius: 0.06
-material: glass
-
 Material pleasant
 color: 0.556863, 0.2666667, 0.678341
 ambient: 0.1
@@ -127,5 +119,5 @@ refractiveIndex: 2.5
 Disk
 origin: 0, 0, -1
 normal: 0, 0, -1
-radius: 0.4
+radius: 0.8
 material: lens
