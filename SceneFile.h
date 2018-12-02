@@ -1,6 +1,7 @@
 #ifndef _SCENE_FILE_H_
 #define _SCENE_FILE_H_
 
+#include <map>
 #include <string>
 
 #include "Scene.h"

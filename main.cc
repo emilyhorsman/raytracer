@@ -98,8 +98,7 @@ int main(int argc, char **argv) {
     glCullFace(GL_BACK);
 
     loadSceneFile(scene, "./sample.scene");
-    //renderer.render();
-    return 0;
+    renderer.render();
 
     glutMainLoop();
 

@@ -24,11 +24,10 @@ class SceneObject {
 
 
 class Sphere : public SceneObject {
-    private:
+    public:
         Vec3f mOrigin;
         float mRadius;
 
-    public:
         Sphere(
             std::shared_ptr<Material> material,
             Vec3f origin,
@@ -47,11 +46,12 @@ class Sphere : public SceneObject {
 
 class Plane : public SceneObject {
     private:
-        Vec3f mPoint;
-        Vec3f mNormal;
         float computeY(float x, float z);
 
     public:
+        Vec3f mPoint;
+        Vec3f mNormal;
+
         Plane(
             std::shared_ptr<Material> material,
             Vec3f point,

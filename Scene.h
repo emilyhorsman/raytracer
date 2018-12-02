@@ -21,8 +21,6 @@ class Scene {
         Camera mCamera;
 
         Scene();
-        ~Scene();
-        void render();
         void setPerspectiveProjectionGL(int w, int h);
         void drawObjectsGL();
         void setLightingParamsGL();

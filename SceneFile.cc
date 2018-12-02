@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <memory>
 
 #include "Material.h"
 #include "PointLight.h"
@@ -19,6 +20,12 @@ Vec3f mapToVec3f(std::vector<float> v) {
 }
 
 
+std::shared_ptr<Material> defaultMaterial = std::make_shared<Material>(
+    Vec3f({ 1, 0, 0 }),
+    0, 1, 0, 0, 1
+);
+
+
 std::shared_ptr<Material> getMaterial(FloatProperties properties, std::string materialType) {
     std::shared_ptr<Material> mat = NULL;
     auto i = properties.begin();
@@ -31,7 +38,7 @@ std::shared_ptr<Material> getMaterial(FloatProperties properties, std::string ma
 
         ASSIGN_VEC3F("odd", m->oddColor, properties, i);
         ASSIGN_FLOAT("grain", m->size, properties, i);
-        mat = m;
+        mat = std::dynamic_pointer_cast<Material>(m);
     } else if (materialType == "Material") {
         mat = std::make_shared<Material>(
             Vec3f({ 0, 0, 0 }),
@@ -63,13 +70,27 @@ std::vector<std::string> split(std::string s, std::string delimiter) {
 }
 
 
-void parseProperty(std::string line, std::string &key, std::vector<float> &value) {
+std::string trimString(std::string s) {
+    std::string::size_type index = s.find_first_not_of(" ");
+    if (index == std::string::npos) {
+        return "";
+    }
+    return s.substr(index);
+}
+
+
+void parseProperty(std::string line, std::string &key, std::vector<float> &value, std::string &stringValue) {
     std::string::size_type index = line.rfind(":");
     if (index == std::string::npos) {
         throw "Property must be of form `key: value`";
     }
 
     key = line.substr(0, index);
+    if (key == "material") {
+        stringValue = trimString(line.substr(index + 1));
+        return;
+    }
+
     auto parts = split(line.substr(index + 1), ",");
     for (auto s : parts) {
         if (s.empty()) {
@@ -99,9 +120,9 @@ bool parseMaterial(Materials &materials, std::istream &stream, std::string line,
             break;
         }
 
-        std::string key;
+        std::string key, _v;
         std::vector<float> value;
-        parseProperty(row, key, value);
+        parseProperty(row, key, value, _v);
         properties[key] = value;
     }
 
@@ -144,9 +165,9 @@ bool parseLight(std::vector<std::shared_ptr<PointLight>> &lights, std::istream &
             break;
         }
 
-        std::string key;
+        std::string key, _v;
         std::vector<float> value;
-        parseProperty(row, key, value);
+        parseProperty(row, key, value, _v);
         properties[key] = value;
     }
 
@@ -157,6 +178,72 @@ bool parseLight(std::vector<std::shared_ptr<PointLight>> &lights, std::istream &
 
     lights.push_back(light);
     return true;
+}
+
+
+std::shared_ptr<SceneObject> getObject(FloatProperties properties, Materials &materials, std::string materialId, std::string objectType) {
+    std::shared_ptr<SceneObject> obj = NULL;
+    auto i = properties.begin();
+
+    if (objectType == "Sphere") {
+        auto o = std::make_shared<Sphere>(
+            defaultMaterial,
+            Vec3f({ 0, 0, -1 }),
+            0.25f
+        );
+
+        ASSIGN_VEC3F("origin", o->mOrigin, properties, i);
+        ASSIGN_FLOAT("radius", o->mRadius, properties, i);
+        obj = o;
+    } else if (objectType == "Plane") {
+        auto o = std::make_shared<Plane>(
+            defaultMaterial,
+            Vec3f({ 0, -1, 0 }),
+            Vec3f({ 0, 1, 0 })
+        );
+
+        ASSIGN_VEC3F("point", o->mPoint, properties, i);
+        ASSIGN_VEC3F("normal", o->mNormal, properties, i);
+        obj = o;
+    }
+
+    auto m = materials.find(materialId);
+    if (m != materials.end()) {
+        obj->mMaterial = m->second;
+    }
+
+    return obj;
+}
+
+
+bool parseObject(std::vector<std::shared_ptr<SceneObject>> &objects, Materials &materials, std::istream &stream, std::string line, std::string objectType) {
+    if (line != objectType) {
+        return false;
+    }
+
+    std::string row;
+    FloatProperties properties;
+    std::string materialId;
+    while (true) {
+        std::getline(stream, row);
+        if (row.empty()) {
+            break;
+        }
+
+        std::string key;
+        std::vector<float> value;
+        parseProperty(row, key, value, materialId);
+        properties[key] = value;
+    }
+
+    auto object = getObject(properties, materials, materialId, objectType);
+    if (object == NULL) {
+        return false;
+    }
+
+    objects.push_back(object);
+    return true;
+
 }
 
 
@@ -177,6 +264,12 @@ bool loadSceneFile(Scene &scene, std::string file) {
         }
         if (!result) {
             result = parseLight(scene.mPointLights, f, line, "PointLight");
+        }
+        if (!result) {
+            result = parseObject(scene.mObjects, materials, f, line, "Plane");
+        }
+        if (!result) {
+            result = parseObject(scene.mObjects, materials, f, line, "Sphere");
         }
     }
 
