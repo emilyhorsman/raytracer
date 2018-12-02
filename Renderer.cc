@@ -50,6 +50,7 @@ Renderer::Renderer(Scene &scene)
 
 
 void Renderer::render() {
+    printIntro();
     Vec3f *image = new Vec3f[mHeight * mWidth];
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
@@ -420,4 +421,43 @@ Vec3f computeRefractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
         multiply(ray, relativeIndexOfRefraction),
         multiply(normal, sqrtf(base) - relativeIndexOfRefraction * cosi)
     );
+}
+
+
+void Renderer::printIntro() {
+    std::cout << "=== Render Info ===" << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Image Dimension" << mWidth << " x " << mHeight << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Threads" << mNumThreads << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Max Depth" << mMaxDepth << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Anti-Aliasing" << mAntiAliasing << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Sampling Method";
+    if (mAntiAliasing == 0) {
+        std::cout << "Off";
+    } else if (mAntiAliasingMethod == REGULAR) {
+        std::cout << "Regular";
+    } else if (mAntiAliasingMethod == RANDOM) {
+        std::cout << "Random";
+    }
+    std::cout << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Soft Shadows?" << (mEnableSoftShadows ? "Yes" : "No") << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Iterations" << mNoiseReduction << std::endl;
+    std::cout << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Field of View" << mScene.mCamera.mFieldOfViewRadians * 180.0f / M_PI << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Eye"
+              << mScene.mCamera.mPosition[0] << ", "
+              << mScene.mCamera.mPosition[1] << ", "
+              << mScene.mCamera.mPosition[2]
+              << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Focal Point"
+              << mScene.mCamera.mLookAt[0] << ", "
+              << mScene.mCamera.mLookAt[1] << ", "
+              << mScene.mCamera.mLookAt[2]
+              << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Aperture Radius";
+    if (mScene.mCamera.mApertureRadius == 0) {
+        std::cout << "Pinhole";
+    } else {
+        std::cout << mScene.mCamera.mApertureRadius;
+    }
+    std::cout << std::endl << std::endl;
 }

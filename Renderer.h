@@ -50,6 +50,7 @@ class Renderer {
         Renderer(Scene &scene);
         bool getWork(int &start, int &end);
         void printProgress();
+        void printIntro();
 
         void render();
 };
