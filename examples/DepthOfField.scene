@@ -1,0 +1,105 @@
+Renderer
+width: 600
+height: 500
+maxDepth: 3
+antiAliasing: 4
+samplingMethod: regular
+useSoftShadows: true
+iterations: 30
+threads: 12
+outputFile: ./examples/DepthOfField.ppm
+
+Camera
+fieldOfViewDegrees: 90
+eye: 0, 0, 0.25
+lookAt: 0.5, 0.8, -2
+apertureRadius: 0.2
+
+CheckerboardMaterial checkersBW
+color: 1, 1, 1
+odd: 0, 0, 0
+ambient: 0.2
+diffuse: 0.8
+grain: 0.05
+
+Material leftWall
+color: 0, 0.721569, 0.580392
+ambient: 0.2
+diffuse: 0.8
+
+Material rightWall
+color: 1, 0.917647, 0.654902
+ambient: 0.2
+diffuse: 0.8
+
+Material backWall
+color: 0.333333, 0.937255, 0.768627
+ambient: 0.2
+diffuse: 0.8
+
+Material floor
+color: 0.454902, 0.72549, 1
+ambient: 0.2
+diffuse: 0.8
+
+Material ceiling
+color: 0.882353, 0.439216, 0.333333
+ambient: 0.2
+diffuse: 0.8
+
+PointLight
+position: 0, 0.95, -1.3
+radius: 0.3
+intensity: 1
+
+Plane
+material: leftWall
+point: -1.5, 0, 0
+normal: 1, 0, -0.25
+
+Plane
+material: rightWall
+point: 1.5, 0, 0
+normal: -1, 0, -0.25
+
+Plane
+material: backWall
+point: 0, 0, -4
+normal: 0, 0, 1
+
+Plane
+material: floor
+point: 0, -1, 0
+normal: 0, 1, 0
+
+Plane
+material: ceiling
+point: 0, 1, 0
+normal: 0, -1, -0.25
+
+Sphere
+origin: -1, -0.5, -2.1
+radius: 0.45
+material: checkersBW
+
+Material mirror
+color: 1, 1, 1
+ambient: 0
+diffuse: 0
+specular: 1
+
+Sphere
+origin: 1, -0.5, -1.6
+radius: 0.5
+material: mirror
+
+Material pleasant
+color: 0.556863, 0.2666667, 0.678341
+ambient: 0.1
+diffuse: 0.8
+specular: 0.1
+
+Sphere
+origin: 0.5, 0.8, -2
+radius: 0.35
+material: pleasant
