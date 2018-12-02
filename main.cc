@@ -11,6 +11,7 @@
 
 #include "Renderer.h"
 #include "Scene.h"
+#include "SceneFile.h"
 
 
 #define CANVAS_WIDTH 600
@@ -96,7 +97,9 @@ int main(int argc, char **argv) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    renderer.render();
+    loadSceneFile(scene, "./sample.scene");
+    //renderer.render();
+    return 0;
 
     glutMainLoop();
 

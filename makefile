@@ -1,4 +1,4 @@
-OBJECT_DEPS=main.o Scene.o Objects.o Vector.o Camera.o Material.o Utility.o PointLight.o Stats.o Renderer.o ImageFile.o
+OBJECT_DEPS=main.o Scene.o Objects.o Vector.o Camera.o Material.o Utility.o PointLight.o Stats.o Renderer.o ImageFile.o SceneFile.o
 TEST_OBJECT_DEPS=tests/tests.o Scene.o Objects.o Vector.o Camera.o Material.o Utility.o PointLight.o Stats.o Renderer.o ImageFile.o
 
 # Linux (default)
