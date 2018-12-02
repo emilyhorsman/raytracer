@@ -19,3 +19,24 @@ float randomFloat() {
 Vec3f randomVec3f() {
     return Vec3f({ randomFloat(), randomFloat(), randomFloat() });
 }
+
+
+bool rayPlaneIntersection(
+    Vec3f rayOrigin,
+    Vec3f rayDirection,
+    Vec3f planePoint,
+    Vec3f planeNormal,
+    float &intersectionScalar
+) {
+    float directionDotNormal = dot(planeNormal, rayDirection);
+    if (fabs(directionDotNormal) <= 1e-6) {
+        return false;
+    }
+
+    intersectionScalar = (
+        dot(subtract(planePoint, rayOrigin), planeNormal) /
+        directionDotNormal
+    );
+
+    return intersectionScalar >= 1e-6;
+}

@@ -18,4 +18,13 @@ float randomFloat();
 Vec3f randomVec3f();
 
 
+bool rayPlaneIntersection(
+    Vec3f rayOrigin,
+    Vec3f rayDirection,
+    Vec3f planePoint,
+    Vec3f planeNormal,
+    float &intersectionScalar
+);
+
+
 #endif

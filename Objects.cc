@@ -16,6 +16,7 @@
 #include <cmath>
 
 #include "Objects.h"
+#include "Utility.h"
 
 
 SceneObject::SceneObject(std::shared_ptr<Material> material)
@@ -107,17 +108,7 @@ bool Plane::intersect(
     Vec3f rayDirection,
     float &intersectionScalar
 ) {
-    float directionDotNormal = dot(mNormal, rayDirection);
-    if (fabs(directionDotNormal) <= 1e-6) {
-        return false;
-    }
-
-    intersectionScalar = (
-        dot(subtract(mPoint, rayOrigin), mNormal) /
-        directionDotNormal
-    );
-
-    return intersectionScalar >= 0;
+    return rayPlaneIntersection(rayOrigin, rayDirection, mPoint, mNormal, intersectionScalar);
 }
 
 
@@ -166,17 +157,7 @@ bool Disk::intersect(
     Vec3f rayDirection,
     float &intersectionScalar
 ) {
-    float directionDotNormal = dot(mNormal, rayDirection);
-    if (fabs(directionDotNormal) <= 1e-6) {
-        return false;
-    }
-
-    intersectionScalar = (
-        dot(subtract(mOrigin, rayOrigin), mNormal) /
-        directionDotNormal
-    );
-
-    if (intersectionScalar <= 1e-6) {
+    if (!rayPlaneIntersection(rayOrigin, rayDirection, mOrigin, mNormal, intersectionScalar)) {
         return false;
     }
 
