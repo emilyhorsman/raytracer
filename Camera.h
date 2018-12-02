@@ -12,6 +12,7 @@ class Camera {
         float mApertureRadius;
 
         Camera();
+        void computePrimaryRay(float pixelX, float pixelY, Vec3f &direction, Vec3f &origin);
 };
 
 
