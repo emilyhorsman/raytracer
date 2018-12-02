@@ -42,6 +42,7 @@ Renderer::Renderer(Scene &scene)
 , mAntiAliasingMethod(REGULAR)
 , mEnableSoftShadows(false)
 , mNumThreads(1)
+, mOutputFile("./Ray.ppm")
 {
     int s = (int) sqrtf(mAntiAliasing);
     if (s * s != mAntiAliasing) {
@@ -82,7 +83,7 @@ void Renderer::render() {
         t->mStats.print();
     }
 
-    writeImage("./Ray.ppm", mWidth, mHeight, mImage);
+    writeImage(mOutputFile, mWidth, mHeight, mImage);
 }
 
 
@@ -435,6 +436,7 @@ Vec3f computeRefractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
 
 void Renderer::printIntro(std::string file) {
     std::cout << "=== Render Info " << file << " ===" << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Target" << "OpenGL, " << mOutputFile << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Image Dimension" << mWidth << " x " << mHeight << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Threads" << mNumThreads << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Max Depth" << mMaxDepth << std::endl;

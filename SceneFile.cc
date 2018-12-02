@@ -323,6 +323,8 @@ bool parseRenderer(Renderer &renderer, std::istream &stream, std::string line, s
                 std::cout << "Invalid useSoftShadows. Must be 'true' or 'false'." << std::endl;
                 throw "Invalid useSoftShadows. Must be 'true' or 'false'.";
             }
+        } else if (key == "outputFile") {
+            renderer.mOutputFile = value;
         } else {
             std::cout << "Invalid Renderer key: " << key << std::endl;
             throw "Invalid renderer key.";

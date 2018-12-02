@@ -48,6 +48,7 @@ class Renderer {
         AntiAliasingMethod mAntiAliasingMethod;
         bool mEnableSoftShadows;
         int mNumThreads;
+        std::string mOutputFile;
 
         Renderer(Scene &scene);
         ~Renderer();

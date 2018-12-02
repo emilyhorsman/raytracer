@@ -7,6 +7,7 @@ samplingMethod: regular
 useSoftShadows: false
 iterations: 1
 threads: 12
+outputFile: ./sample.ppm
 
 Camera
 fieldOfViewDegrees: 90
