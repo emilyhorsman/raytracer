@@ -471,4 +471,7 @@ void Renderer::printIntro(std::string file) {
         std::cout << mScene.mCamera.mApertureRadius;
     }
     std::cout << std::endl << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Objects" << mScene.mObjects.size() << std::endl;
+    std::cout << std::left << std::setw(20) << std::setfill(' ') << "Lights" << mScene.mPointLights.size() << std::endl;
+    std::cout << std::endl << std::endl;
 }
