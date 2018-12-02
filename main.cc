@@ -19,17 +19,7 @@
 
 
 Scene scene;
-Renderer renderer(
-    scene,
-    CANVAS_WIDTH,
-    CANVAS_HEIGHT,
-    3,
-    4,
-    REGULAR,
-    false,
-    1,
-    12
-);
+Renderer renderer(scene);
 
 
 void handleDisplay() {
@@ -97,7 +87,7 @@ int main(int argc, char **argv) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    loadSceneFile(scene, "./sample.scene");
+    loadSceneFile(renderer, scene, "./sample.scene");
     renderer.render();
 
     glutMainLoop();

@@ -5,10 +5,13 @@
 #include "Utility.h"
 
 
+Vec3f imagePlaneNormal({ 0, 0, -1 });
+
+
 Camera::Camera()
-: mFieldOfViewRadians(M_PI / 2)
-, mPosition{{ 0, 0, 0.25 }}
-, mLookAt{{ 0.5, 0.8, -2 }}
+: mFieldOfViewRadians(M_PI / 3)
+, mPosition{{ 0, 0, 1 }}
+, mLookAt{{ 0, 0, -1 }}
 , mApertureRadius(0)
 {}
 
@@ -16,7 +19,7 @@ Camera::Camera()
 void Camera::computePrimaryRay(float pixelX, float pixelY, Vec3f &direction, Vec3f &origin) {
     // Depth of field based on [5][6][7]
     // This is the pre-DOF ray that projects through the pixel in image space.
-    Vec3f ray({ pixelX, pixelY, -1 });
+    Vec3f ray = normalize(Vec3f({ pixelX, pixelY, -1 }));
     float t;
     // There is an imaginary focal plane between the image plane and the
     // objects in the scene. We know one point on the plane: the point the
@@ -25,7 +28,7 @@ void Camera::computePrimaryRay(float pixelX, float pixelY, Vec3f &direction, Vec
         mPosition,
         ray,
         mLookAt,
-        Vec3f({ 0, 0, -1 }),
+        imagePlaneNormal,
         t
     ));
     // Compute the point on the imaginary focal plane that this ray intersects.

@@ -47,17 +47,7 @@ class Renderer {
         bool mEnableSoftShadows;
         int mNumThreads;
 
-        Renderer(
-            Scene &scene,
-            int width,
-            int height,
-            int maxDepth,
-            int antiAliasing,
-            AntiAliasingMethod antiAliasMethod,
-            bool enableSoftShadows,
-            int noiseReduction,
-            int numThreads
-        );
+        Renderer(Scene &scene);
         bool getWork(int &start, int &end);
         void printProgress();
 

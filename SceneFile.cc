@@ -1,10 +1,17 @@
-#include <iostream>
+/**
+ * This parsing code is fairly rudimentary and fairly unpleasant. It lets many
+ * erroenous scene files off the hook.
+ */
+#include <cmath>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <memory>
+#include <utility>
 
 #include "Material.h"
 #include "PointLight.h"
+#include "Renderer.h"
 #include "Scene.h"
 #include "SceneFile.h"
 
@@ -79,19 +86,31 @@ std::string trimString(std::string s) {
 }
 
 
+std::pair<std::string, std::string> parseKey(std::string line) {
+    std::string::size_type index = line.rfind(":");
+    if (index == std::string::npos) {
+        throw "Property must be of form `key: value`";
+    }
+
+    return std::make_pair(line.substr(0, index), line.substr(index + 1));
+}
+
+
 void parseProperty(std::string line, std::string &key, std::vector<float> &value, std::string &stringValue) {
     std::string::size_type index = line.rfind(":");
     if (index == std::string::npos) {
         throw "Property must be of form `key: value`";
     }
 
-    key = line.substr(0, index);
+    auto t = parseKey(line);
+    std::string v;
+    std::tie(key, v) = t;
     if (key == "material") {
         stringValue = trimString(line.substr(index + 1));
         return;
     }
 
-    auto parts = split(line.substr(index + 1), ",");
+    auto parts = split(v, ",");
     for (auto s : parts) {
         if (s.empty()) {
             throw "Empty value.";
@@ -110,7 +129,6 @@ bool parseMaterial(Materials &materials, std::istream &stream, std::string line,
     if (materialId.empty()) {
         throw "No material ID for material.";
     }
-    std::cout << "Found " << materialType << " with ID " << materialId << std::endl;
 
     std::string row;
     FloatProperties properties;
@@ -255,11 +273,118 @@ bool parseObject(std::vector<std::shared_ptr<SceneObject>> &objects, Materials &
 
     objects.push_back(object);
     return true;
-
 }
 
 
-bool loadSceneFile(Scene &scene, std::string file) {
+bool parseRenderer(Renderer &renderer, std::istream &stream, std::string line, std::string tag) {
+    if (line != tag) {
+        return false;
+    }
+
+    std::string row;
+    FloatProperties properties;
+    std::string materialId;
+    while (true) {
+        std::getline(stream, row);
+        if (row.empty()) {
+            break;
+        }
+
+        std::string key, value;
+        std::tie(key, value) = parseKey(row);
+        value = trimString(value);
+        if (key == "width") {
+            renderer.mWidth = std::stoi(value);
+        } else if (key == "height") {
+            renderer.mHeight = std::stoi(value);
+        } else if (key == "maxDepth") {
+            renderer.mMaxDepth = std::stoi(value);
+        } else if (key == "antiAliasing") {
+            renderer.mAntiAliasing = std::stoi(value);
+        } else if (key == "iterations") {
+            renderer.mNoiseReduction = std::stoi(value);
+        } else if (key == "threads") {
+            renderer.mNumThreads = std::stoi(value);
+        } else if (key == "samplingMethod") {
+            if (value == "regular") {
+                renderer.mAntiAliasingMethod = REGULAR;
+            } else if (value == "random") {
+                renderer.mAntiAliasingMethod = RANDOM;
+            } else {
+                std::cout << "Invalid anti-aliasing method. Must be 'regular' or 'random'." << std::endl;
+                throw "Invalid anti-aliasing method. Must be 'regular' or 'random'.";
+            }
+        } else if (key == "useSoftShadows") {
+            if (value == "true") {
+                renderer.mEnableSoftShadows = true;
+            } else if (value == "false") {
+                renderer.mEnableSoftShadows = false;
+            } else {
+                std::cout << "Invalid useSoftShadows. Must be 'true' or 'false'." << std::endl;
+                throw "Invalid useSoftShadows. Must be 'true' or 'false'.";
+            }
+        } else {
+            std::cout << "Invalid Renderer key: " << key << std::endl;
+            throw "Invalid renderer key.";
+        }
+    }
+
+    return true;
+}
+
+
+bool parseCamera(Camera &camera, std::istream &stream, std::string line, std::string tag) {
+    if (line != tag) {
+        return false;
+    }
+
+    std::string row;
+    FloatProperties properties;
+    std::string materialId;
+    while (true) {
+        std::getline(stream, row);
+        if (row.empty()) {
+            break;
+        }
+
+        std::string key, value;
+        std::tie(key, value) = parseKey(row);
+        value = trimString(value);
+        if (key == "fieldOfViewDegrees") {
+            camera.mFieldOfViewRadians = std::stof(value) * M_PI / 180.0f;
+        } else if (key == "eye" || key == "lookAt") {
+            auto parts = split(value, ",");
+            std::vector<float> v;
+            for (auto s : parts) {
+                if (s.empty()) {
+                    throw "Empty value.";
+                }
+                v.push_back(std::stof(s));
+            }
+            if (v.size() != 3) {
+                std::cout << "Invalid value for " << key << ", must have 3 comma-separated floats." << std::endl;
+                throw "Invalid camera value.";
+            }
+
+            Vec3f vec = mapToVec3f(v);
+            if (key == "eye") {
+                camera.mPosition = vec;
+            } else if (key == "lookAt") {
+                camera.mLookAt = vec;
+            }
+        } else if (key == "apertureRadius") {
+            camera.mApertureRadius = std::stof(value);
+        } else {
+            std::cout << "Invalid Camera key: " << key << std::endl;
+            throw "Invalid camera key.";
+        }
+    }
+
+    return true;
+}
+
+
+bool loadSceneFile(Renderer &renderer, Scene &scene, std::string file) {
     std::ifstream f(file);
     if (!f.is_open()) {
         std::cout << "Failed to open " << file << ". The scene was not loaded.\n" << std::endl;
@@ -285,6 +410,12 @@ bool loadSceneFile(Scene &scene, std::string file) {
         }
         if (!result) {
             result = parseObject(scene.mObjects, materials, f, line, "Disk");
+        }
+        if (!result) {
+            result = parseRenderer(renderer, f, line, "Renderer");
+        }
+        if (!result) {
+            result = parseCamera(scene.mCamera, f, line, "Camera");
         }
     }
 

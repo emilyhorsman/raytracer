@@ -28,32 +28,22 @@
 #define WORK_BLOCK_SIZE 4
 
 
-Renderer::Renderer(
-    Scene &scene,
-    int width,
-    int height,
-    int maxDepth,
-    int antiAliasing,
-    AntiAliasingMethod antiAliasMethod,
-    bool enableSoftShadows,
-    int noiseReduction,
-    int numThreads
-)
+Renderer::Renderer(Scene &scene)
 : mWorkQueue()
 , mQueueLock()
 , mCompletedRows(0)
 , mScene(scene)
-, mWidth(width)
-, mHeight(height)
-, mNoiseReduction(noiseReduction)
-, mMaxDepth(maxDepth)
-, mAntiAliasing(antiAliasing)
-, mAntiAliasingMethod(antiAliasMethod)
-, mEnableSoftShadows(enableSoftShadows)
-, mNumThreads(numThreads)
+, mWidth(600)
+, mHeight(500)
+, mNoiseReduction(1)
+, mMaxDepth(3)
+, mAntiAliasing(0)
+, mAntiAliasingMethod(REGULAR)
+, mEnableSoftShadows(false)
+, mNumThreads(1)
 {
     int s = (int) sqrtf(mAntiAliasing);
-    if (s * s != antiAliasing) {
+    if (s * s != mAntiAliasing) {
         printf("Warning! Anti-aliasing sample quantity must be a square number.\n");
     }
 }
