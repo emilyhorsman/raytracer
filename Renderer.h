@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <string>
 #include <thread>
 #include <utility>
 
@@ -50,7 +51,7 @@ class Renderer {
         Renderer(Scene &scene);
         bool getWork(int &start, int &end);
         void printProgress();
-        void printIntro();
+        void printIntro(std::string file);
 
         void render();
 };

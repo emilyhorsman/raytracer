@@ -8,6 +8,7 @@
 #  include <GL/freeglut.h>
 #endif
 #include <ctime>
+#include <string>
 
 #include "Renderer.h"
 #include "Scene.h"
@@ -69,7 +70,12 @@ void handleKeyboard(unsigned char key, int _x, int _y) {
 
 int main(int argc, char **argv) {
     srand(time(NULL));
-    loadSceneFile(renderer, scene, "./sample.scene");
+    std::string file = "./sample.scene";
+    if (argc == 2) {
+        file = std::string(argv[1]);
+    }
+    loadSceneFile(renderer, scene, file);
+    renderer.printIntro(file);
 
     glutInit(&argc, argv);
     glutInitWindowSize(renderer.mWidth, renderer.mHeight);

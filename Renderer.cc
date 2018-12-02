@@ -50,7 +50,6 @@ Renderer::Renderer(Scene &scene)
 
 
 void Renderer::render() {
-    printIntro();
     Vec3f *image = new Vec3f[mHeight * mWidth];
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
@@ -424,8 +423,8 @@ Vec3f computeRefractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
 }
 
 
-void Renderer::printIntro() {
-    std::cout << "=== Render Info ===" << std::endl;
+void Renderer::printIntro(std::string file) {
+    std::cout << "=== Render Info " << file << " ===" << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Image Dimension" << mWidth << " x " << mHeight << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Threads" << mNumThreads << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Max Depth" << mMaxDepth << std::endl;
