@@ -20,26 +20,7 @@ Scene::Scene()
 : mObjects()
 , mPointLights()
 , mCamera()
-{
-    for (int i = 0; i < 50; i++) {
-        float x = (float) (rand() % 1000) / 1000.0f - 0.6f;
-        float y = (float) (rand() % 1000) / 1000.0f - 0.5f;
-        float z = (float) (rand() % 1000) / -1000.0f;
-        float r = (float) (rand() % 1000) / 1000.0f;
-        float g = (float) (rand() % 1000) / 1000.0f;
-        float b = (float) (rand() % 1000) / 1000.0f;
-        mObjects.push_back(
-            std::make_shared<Sphere>(
-                std::make_shared<Material>(
-                    Vec3f({ r, g, b }),
-                    0.1f, 0.5f, 0.4f, 0, 1
-                ),
-                Vec3f({ x, y, z }),
-                0.01f
-            )
-        );
-    }
-}
+{}
 
 
 bool Scene::getIntersection(

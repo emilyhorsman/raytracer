@@ -12,12 +12,6 @@ ambient: 0.2
 diffuse: 0.8
 grain: 0.5
 
-Material blue
-color: 0, 0, 1
-ambient: 0.2
-diffuse: 0.6
-specular: 0.2
-
 Material leftWall
 color: 0, 0.721569, 0.580392
 ambient: 0.2
@@ -42,53 +36,47 @@ specular: 0.3
 Material ceiling
 color: 0.882353, 0.439216, 0.333333
 ambient: 0.2
-diffuse: 0.5
-specular: 0.3
+diffuse: 0.8
 
 PointLight
-position: 0, 2, -1
-radius: 0.1
-intensity: 1.5
+position: 0, 0.95, -1.3
+radius: 0.3
+intensity: 1
 
 PointLight
-position: -0.5, -0.25, 0.5
-radius: 0.1
-intensity: 1.6
+position: -0.2, 0, -1
+radius: 0.2
+intensity: 0.2
 
 Plane
 material: leftWall
-point: -1, 0, 0
-normal: 1, 0, -0.5
+point: -1.5, 0, 0
+normal: 1, 0, -0.25
 
 Plane
 material: rightWall
-point: 1, 0, 0
-normal: -1, 0, -0.5
+point: 1.5, 0, 0
+normal: -1, 0, -0.25
 
 Plane
 material: backWall
-point: 0, 0, -3
+point: 0, 0, -4
 normal: 0, 0, 1
 
 Plane
 material: floor
-point: 0, -0.5, 0
+point: 0, -1, 0
 normal: 0, 1, 0
 
 Plane
 material: ceiling
-point: 0, 0.35, 0
-normal: 0, -1, -0.5
+point: 0, 1, 0
+normal: 0, -1, -0.25
 
 Sphere
-origin: -0.35, -0.2, -0.6
-radius: 0.15
+origin: -1, -0.5, -2.1
+radius: 0.45
 material: checkersBW
-
-Sphere
-origin: -0.45, -0.2, -1.6
-radius: 0.2
-material: blue
 
 Material mirror
 color: 1, 1, 1
@@ -97,20 +85,9 @@ diffuse: 0
 specular: 1
 
 Sphere
-origin: 0.5, 0, -1
-radius: 0.25
+origin: 1, -0.5, -1.6
+radius: 0.5
 material: mirror
-
-Material red
-color: 0.8392156863, 0.1882352941, 0.1921568627
-ambient: 0.1
-diffuse: 0.8
-specular: 0.1
-
-Sphere
-origin: -0.5, 0, -0.5
-radius: 0.05
-material: red
 
 Material glass
 ambient: 0
@@ -120,6 +97,17 @@ transmission: 1
 refractiveIndex: 1.5
 
 Sphere
-origin: -0.2, -0.25, -0.4
-radius: 0.04
+origin: -0.2, -0.25, -0.6
+radius: 0.06
 material: glass
+
+Material pleasant
+color: 0.556863, 0.2666667, 0.678341
+ambient: 0.1
+diffuse: 0.8
+specular: 0.1
+
+Sphere
+origin: 0.5, 0.8, -2
+radius: 0.35
+material: pleasant
