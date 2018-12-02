@@ -395,6 +395,7 @@ bool loadSceneFile(Renderer &renderer, Scene &scene, std::string file) {
     while (f.peek() != EOF) {
         std::string line;
         std::getline(f, line);
+        // This is so bad
         bool result = parseMaterial(materials, f, line, "CheckerboardMaterial");
         if (!result) {
             result = parseMaterial(materials, f, line, "Material");

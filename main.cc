@@ -14,10 +14,6 @@
 #include "SceneFile.h"
 
 
-#define CANVAS_WIDTH 600
-#define CANVAS_HEIGHT 500
-
-
 Scene scene;
 Renderer renderer(scene);
 
@@ -46,8 +42,8 @@ void setOrthographicProjection(int w, int h) {
     // Center the statically-sized canvas within the window. Essentially we're
     // computing the correct margin between the sides of the window and when
     // (0,0) to (canvasWidth, canvasHeight) is centered.
-    float centeringMarginX = (float) (w - CANVAS_WIDTH) / 2.0f;
-    float centeringMarginY = (float) (h - CANVAS_HEIGHT) / 2.0f;
+    float centeringMarginX = (float) (w - renderer.mWidth) / 2.0f;
+    float centeringMarginY = (float) (h - renderer.mHeight) / 2.0f;
     gluOrtho2D(
         -centeringMarginX,
         w - centeringMarginX,
@@ -73,9 +69,10 @@ void handleKeyboard(unsigned char key, int _x, int _y) {
 
 int main(int argc, char **argv) {
     srand(time(NULL));
+    loadSceneFile(renderer, scene, "./sample.scene");
 
     glutInit(&argc, argv);
-    glutInitWindowSize(CANVAS_WIDTH, CANVAS_HEIGHT);
+    glutInitWindowSize(renderer.mWidth, renderer.mHeight);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH);
     glutCreateWindow("Raytracer Sandbox (Real-time Approximation Mode)");
 
@@ -87,7 +84,6 @@ int main(int argc, char **argv) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    loadSceneFile(renderer, scene, "./sample.scene");
     renderer.render();
 
     glutMainLoop();

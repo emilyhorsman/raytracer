@@ -1,6 +1,6 @@
 Renderer
-width: 600
-height: 500
+width: 900
+height: 700
 maxDepth: 3
 antiAliasing: 4
 samplingMethod: regular
@@ -12,7 +12,7 @@ Camera
 fieldOfViewDegrees: 90
 eye: 0, 0, 0.25
 lookAt: 0.5, 0.8, -2
-apertureRadius: 0.1
+apertureRadius: 0
 
 CheckerboardMaterial checkersBW
 color: 1, 1, 1
