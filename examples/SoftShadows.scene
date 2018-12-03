@@ -1,0 +1,45 @@
+Renderer
+width: 1200
+height: 600
+maxDepth: 1
+antiAliasing: 4
+samplingMethod: random
+useSoftShadows: true
+iterations: 500
+threads: 12
+outputFile: ./examples/SoftShadows.ppm
+
+Material sphere
+color: 0.9882352941, 0.2588235294, 0.4823529412
+ambient: 0.2
+diffuse: 0.8
+
+Material white
+color: 1, 1, 1
+ambient: 0
+diffuse: 1
+
+Sphere
+origin: 0, 0, -1
+radius: 0.5
+material: sphere
+
+Plane
+point: 0, -0.6, 0
+normal: 0, 1, 0
+material: white
+
+Plane
+point: 0, 0, -2.5
+normal: 0, 0, 1
+material: white
+
+PointLight
+position: -1.5, 1, 0
+radius: 0.6
+intensity: 0.7
+
+PointLight
+position: 0.5, 2, -1
+radius: 0.3
+intensity: 0.3

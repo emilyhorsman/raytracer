@@ -47,7 +47,177 @@
     \item Adjustable depth-of field and camera field of view
 \end{itemize}
 
-\section{Scene Files}
+\section{Execution}
+
+Running the ray tracer requires a scene file.
+The root of this repository includes \texttt{sample.scene} which will be used by default if no scene file is provided.
+Running \texttt{make} from the root of the repo will compile and run the ray tracer with the sample scene.
+Note that the sample scene file specifies \texttt{threads: 12} by default.
+This should be adjusted according to your system.
+\\\\
+\noindent
+The image will be rendered to a PPM bitmap and a GLUT window.
+I highly recommend viewing the PPM bitmap, but the GLUT window is convenient for a quick glance.
+
+\subsection{Compile}
+
+\begin{verbatim}
+$ make
+<…compiling and linking…>
+./Ray
+=== Render Info ./sample.scene ===
+Target              OpenGL, ./sample.ppm
+Image Dimension     900 x 700
+Threads             12
+Max Depth           3
+Anti-Aliasing       4
+Sampling Method     Regular
+Soft Shadows?       No
+Iterations          1
+
+Field of View       90
+Eye                 0, 0, 0.25
+Focal Point         0.5, 0.8, -2
+Aperture Radius     Pinhole
+
+Objects             9
+Lights              1
+\end{verbatim}
+
+\subsection{Unit tests}
+
+There is a small suite of unit tests included.
+These primarily cover ray-object intersections.
+
+\begin{verbatim}
+$ make test
+\end{verbatim}
+
+\subsection{Generating documentation}
+
+This repository uses \texttt{Doxygen} to generate code documentation.
+It includes a minimally configured \texttt{Doxyfile}.
+
+\begin{verbatim}
+$ make docs
+\end{verbatim}
+
+\subsection{Run a scene file}
+
+The \texttt{Ray} executable accepts a single command-line argument for a scene file path.
+
+\begin{verbatim}
+$ ./Ray ./examples/DepthOfField.scene
+\end{verbatim}
+
+\subsection{Writing a scene file}
+
+Scene files are just plain text files containing sections separated by an extra newline.
+The best way to write new ones is to reference \texttt{sample.scene} and \texttt{examples/*.scene}.
+\\\\
+\noindent
+Each section starts with a tag such as \texttt{Renderer} or \texttt{Material}.
+A tag is followed by properties in the format of \texttt{key: value}.
+Global parameters such as rendering (e.g., number of threads) and camera options (e.g., field of view) are placed under a \texttt{Renderer} and \texttt{Camera} section.
+Objects reference materials by an ID you give when writing the material.
+You must specify the material section before the objects which use it.
+\\\\
+\noindent
+A minimal sample scene file is produced below.
+
+\begin{verbatim}
+Renderer
+antiAliasing: 4
+samplingMethod: random
+useSoftShadows: true
+iterations: 30
+threads: 12
+outputFile: ./minimal.ppm
+
+PointLight
+position: 0, 1, -1
+radius: 0
+intensity: 1
+
+CheckerboardMaterial largeCheckers
+color: 1, 1, 1
+odd: 0, 0, 0
+grain: 0.5
+ambient: 0
+diffuse: 0.9
+specular: 0.1
+
+Plane
+material: largeCheckers
+point: 0, -1, 0
+normal: 0, 1, 0
+\end{verbatim}
+
+\noindent
+Materials are tagged by their type, followed by their unique ID: \texttt{Material}, \texttt{CheckerboardMaterial}.
+Objects are tagged by their type: \texttt{Plane}, \texttt{Sphere}, \texttt{Disk}.
+A light is tagged with \texttt{PointLight}.
+
+\subsection{Guidance}
+
+\begin{itemize}
+    \item Turning on soft shadows or using a non-zero aperture radius will require setting \texttt{iterations} higher to reduce noise. The precise value depends on the desired quality, effect (sometimes the noise is pleasant, like an artistically chosen film speed in photography), and computational resources.
+    \item I've found \texttt{samplingMethod: random} to produce better quality images over \texttt{samplingMethod: regular}.
+    \item Objects and lights are placed with $z < 0$. The camera \texttt{eye} is $z > 0$.
+    \item Keep soft shadows off and iterations low while testing, and then increase these properties to the desired values.
+    \item \texttt{antiAliasing: 4} will improve image quality considerably without much extra render time.
+\end{itemize}
+
+\subsection{Scene file properties}
+
+Enumerations are delimited by pipes \texttt{|}.\\\\
+
+\begin{tabular}{p{0.1\textwidth}llrp{0.4\textwidth}}
+    Tag & Property & Type & Example & Description\\
+    \hline
+    Renderer & width & int & 1200 &\\
+    & height & int & 900&\\
+    & maxDepth & int & 10 & Maximum recursion depth for specular and transmission rays.\\
+    & antiAliasing & int & 16 & Number of anti-aliasing samples per pixel, must be a square number.\\
+    & samplingMethod & string & \texttt{regular|random} & The type of anti-aliasing sampling.\\
+    & iterations & int & 100 & Render the image for $n$ iterations and average the result.\\
+    & threads & int & 4 & Multi-threading.\\
+    & useSoftShadows & bool & \texttt{true|false} & Soft shadows will ``jitter'' point lights around their radius.\\
+    & outputFile & string & \texttt{./Scene.ppm} & Rendered image path.\\
+    \hline
+    Camera & fieldOfViewDegrees & int & 45 &\\
+    & lookAt & Vec3f & 0.5, 0.5, -2 & Focal point.\\
+    & eye & Vec3f & 0, 0, 0.25 & Camera position.\\
+    & apertureRadius & float & 0.2 & Use 0 for pinhole/infinite DOF. Higher values have larger DOFs.\\
+    \hline
+    PointLight & position & Vec3f & 0, 1, -1.5 &\\
+    & intensity & float & 0.7 & [0,1]\\
+    & radius & float & 0.1 & Must enable soft shadows in \texttt{Renderer}.\\
+    \hline
+    Material id & color & Vec3f & 1, 0.1, 0.2 &\\
+    & ambient & float & 0.1 & [0,1]\\
+    & diffuse & float & 0.7 & [0,1]\\
+    & specular & float & 0.2 & [0,1]\\
+    & transmission & float & 1 & [0,1] From opaque to 100\% transparent.\\
+    & refractiveIndex & float & 1.5 & $\eta \geq 1$\\
+    \hline
+    CheckerboardMaterial id & & & & Shares all \texttt{Material} properties.\\
+    & odd & Vec3f & 1, 0, 0 & Color of odd squares. \texttt{color} is for even squares.\\
+    & grain & float & 0.5 & Size of checkers.\\
+    \hline
+    Sphere & origin & Vec3f & 0, 0.5, -1.5 &\\
+    & radius & float & 0.5 &\\
+    & material & string & blue & Must be a previously tagged material.\\
+    \hline
+    Plane & point & Vec3f & 0, -1, 0 & Any point in the plane.\\
+    & normal & Vec3f & 0, 1, 0 &\\
+    & material & string & blue & Must be a previously tagged material.\\
+    \hline
+    Disk & origin & Vec3f & 0, -1, 0 & Any point in the plane.\\
+    & normal & Vec3f & 0, 1, 0 &\\
+    & radius & float & 0.05 &\\
+    & material & string & blue & Must be a previously tagged material.\\
+\end{tabular}
 
 \section{Depth of Field}
 
@@ -55,12 +225,18 @@
     \centering
     \subfloat[\texttt{DepthOfField.scene}]{{ \includegraphics[width=0.45\textwidth]{./examples/DepthOfField.png} }}
     \subfloat[\texttt{DepthOfField2.scene}]{{ \includegraphics[width=0.45\textwidth]{./examples/DepthOfField2.png} }}
-    \caption{A scene displayed with two different focal points. Minimal noise reduction, could be increased.}
+    \caption{A scene displayed with two different focal points. These renderings have minimal noise reduction applied. It can be increased with the \texttt{iterations} property in the \texttt{Renderer} section of your scene file.}
 \end{figure}
+
+\pagebreak
 
 \section{Soft Shadows}
 
-TODO
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{./examples/SoftShadows.png}
+    \caption{\texttt{SoftShadows.scene}. Two point lights with a radius of 0.6 and 0.3. The \texttt{Renderer} section has properties \texttt{useSoftShadows: true} and \texttt{iterations: 500}.}
+\end{figure}
 
 \section{Refraction}
 
@@ -75,30 +251,20 @@ TODO
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./examples/HallOfMirrors.png}
-    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with a maxDepth of 15.}
+    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with \texttt{maxDepth: 15} under \texttt{Renderer}.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./examples/HallOfMirrorsDepth2.png}
-    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with a maxDepth of 2.}
+    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with \texttt{maxDepth: 2} under \texttt{Renderer}.}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{./examples/HallOfMirrorsDepth3.png}
-    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with a maxDepth of 1.}
+    \caption{\texttt{HallOfMirros.scene}. Hall of mirrors with \texttt{maxDepth: 1} under \texttt{Renderer}.}
 \end{figure}
-
-\section{Objects}
-
-\subsection{Types}
-
-TODO
-
-\subsection{Texture}
-
-TODO
 
 \section{Anti-Aliasing}
 
@@ -139,6 +305,21 @@ TODO
     \subfloat[Sphere]{{ \includegraphics[width=0.3\textwidth]{./examples/AntiAliasingComparison/CheckeredSphereCrop_random64.png} }}
     \caption{Vanishing plane and checkered sphere with 64x AA using random sampling.}
 \end{figure}
+
+\section{What's Missing?}
+
+These are some things I'd love to do in the future but didn't have time for this semester!
+
+\begin{itemize}
+    \item Quadric objects
+    \item Fresnel effect
+    \item Rendering lights in the scene
+    \item 6-DOF camera
+    \item Triangles with affine transformations
+    \item Mesh files
+    \item A regular grid or k-d tree for performance gains
+    \item Specular highlights
+\end{itemize}
 
 \section{References}
 
