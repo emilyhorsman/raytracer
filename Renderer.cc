@@ -109,7 +109,9 @@ bool Renderer::getWork(int &start, int &end) {
 
 void Renderer::printProgress() {
     float progress = (mCompletedRows / (float) mHeight) * 100;
-    std::cout << std::right << std::setw(5) << std::setfill(' ') << progress << "% [";
+    std::cout << std::right
+             << std::fixed << std::setw(5) << std::setprecision(1) << std::setfill(' ')
+             << progress << "% [";
     for (int i = 0; i < 100; i++) {
         std::cout << (i < progress ? "=" : " ");
     }
