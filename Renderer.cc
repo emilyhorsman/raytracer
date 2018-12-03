@@ -1,14 +1,3 @@
-/**
- * References:
- *
- * [1] https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-generating-camera-rays/generating-camera-rays
- * [2] http://www.3dkingdoms.com/weekly/weekly.php?a=2
- * [3] https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
- * [4] https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
- * [5] Chapter 10 of ``Ray Tracing from the Ground Up'' (Kevin Suffern)
- * [6] http://cg.skeelogy.com/depth-of-field-using-raytracing/
- * [7] https://stackoverflow.com/a/13686064/4909532
- */
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -261,9 +250,9 @@ Vec3f RenderThread::renderPixel(int x, int y) {
 
 
 Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
-    /*if (fabs(norm(ray) - 1) > 1e-4) {
+    if (fabs(norm(ray) - 1) > 1e-4) {
         printf("norm: %f\n", norm(ray));
-    }*/
+    }
 
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar;
