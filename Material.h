@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Material and its subclasses are used to store material properties
+ *        and for computing the color of a material at a coordinate.
+ */
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 

@@ -232,10 +232,25 @@ Enumerations are delimited by pipes \texttt{|}.\\\\
 
 \section{Soft Shadows}
 
+Soft shadows are achieved by randomly displacing each point light within a sphere every time the direction of the light is computed for an intersection point.
+The radius of the volume is configured per light.
+This technique requires rendering multiple times and averaging the results.
+Only non-directional point lights are implemented.
+Thus, the direction of a radius $r$ point light at position $\hat{l}$ for an intersection $\hat{p}$ is computed and normalized:
+$$
+\hat{l} + r * \text{randomVector}(-1, 1) - \hat{p}
+$$
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{./examples/SoftShadows.png}
-    \caption{\texttt{SoftShadows.scene}. Two point lights with a radius of 0.6 and 0.3. The \texttt{Renderer} section has properties \texttt{useSoftShadows: true} and \texttt{iterations: 500}.}
+    \caption{\texttt{SoftShadows.scene}. The \texttt{Renderer} section has properties \texttt{useSoftShadows: true} and \texttt{iterations: 500}.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{./examples/SoftShadowsOff.png}
+    \caption{\texttt{SoftShadows.scene}. Properties \texttt{useSoftShadows: false} and \texttt{iterations: 1}.}
 \end{figure}
 
 \section{Refraction}

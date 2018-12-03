@@ -4,8 +4,8 @@ height: 600
 maxDepth: 1
 antiAliasing: 4
 samplingMethod: random
-useSoftShadows: true
-iterations: 500
+useSoftShadows: false
+iterations: 1
 threads: 12
 outputFile: ./examples/SoftShadows.ppm
 

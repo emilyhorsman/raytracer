@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Writes an array of color vectors to a PPM image.
+ */
 #ifndef _IMAGE_FILE_H_
 #define _IMAGE_FILE_H_
 
