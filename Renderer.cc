@@ -252,10 +252,6 @@ Vec3f RenderThread::renderPixel(int x, int y) {
 
 
 Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
-    if (fabs(norm(ray) - 1) > 1e-4) {
-        printf("norm: %f\n", norm(ray));
-    }
-
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar;
     bool doesIntersect = mRenderer->mScene.getIntersection(

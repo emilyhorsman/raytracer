@@ -14,6 +14,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "SceneFile.h"
+#include "Vector.h"
 
 
 #define ASSIGN_VEC3F(key, prop, map, i) i = map.find(key); if (i != map.end() && i->second.size() == 3) prop = mapToVec3f(i->second);
@@ -222,6 +223,7 @@ std::shared_ptr<SceneObject> getObject(FloatProperties properties, Materials &ma
 
         ASSIGN_VEC3F("point", o->mPoint, properties, i);
         ASSIGN_VEC3F("normal", o->mNormal, properties, i);
+        o->mNormal = normalize(o->mNormal);
         obj = o;
     } else if (objectType == "Disk") {
         auto o = std::make_shared<Disk>(
@@ -234,6 +236,7 @@ std::shared_ptr<SceneObject> getObject(FloatProperties properties, Materials &ma
         ASSIGN_VEC3F("origin", o->mOrigin, properties, i);
         ASSIGN_VEC3F("normal", o->mNormal, properties, i);
         ASSIGN_FLOAT("radius", o->mRadius, properties, i);
+        o->mNormal = normalize(o->mNormal);
         obj = o;
     }
 
