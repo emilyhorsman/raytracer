@@ -90,6 +90,7 @@ std::string trimString(std::string s) {
 std::pair<std::string, std::string> parseKey(std::string line) {
     std::string::size_type index = line.rfind(":");
     if (index == std::string::npos) {
+        std::cout << "Property must be of form `key: value`, error in `" << line << "`" << std::endl;
         throw "Property must be of form `key: value`";
     }
 
