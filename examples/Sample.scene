@@ -1,0 +1,215 @@
+Renderer
+width: 4000
+height: 4000
+maxDepth: 4
+antiAliasing: 4
+samplingMethod: regular
+useSoftShadows: true
+iterations: 100
+threads: 12
+outputFile: ./examples/Sample.ppm
+
+CheckerboardMaterial checkersBW
+color: 1, 1, 1
+odd: 0, 0, 0
+ambient: 0.2
+diffuse: 0.8
+grain: 0.05
+
+Material black
+color: 0, 0, 0
+ambient: 1
+diffuse: 0
+
+Material white
+color: 1, 1, 1
+ambient: 0
+diffuse: 0.9
+specular: 0.1
+
+Material leftWall
+color: 0, 0.721569, 0.580392
+ambient: 0.2
+diffuse: 0.8
+
+Material rightWall
+color: 1, 0.917647, 0.654902
+ambient: 0.2
+diffuse: 0.8
+
+Material backWall
+color: 0.333333, 0.937255, 0.768627
+ambient: 0
+diffuse: 1
+
+Material floor
+color: 0.454902, 0.72549, 1
+ambient: 0.2
+diffuse: 0.8
+
+Material ceiling
+color: 0.882353, 0.439216, 0.333333
+ambient: 0.2
+diffuse: 0.8
+
+Material ceilingB
+color: 0.882353, 0.439216, 0.333333
+ambient: 0.2
+diffuse: 0.7
+specular: 0.1
+
+Material mirror
+color: 1, 1, 1
+ambient: 0
+diffuse: 0
+specular: 1
+
+Material a
+color: 0.9607843137, 0.8039215686, 0.4745098039
+ambient: 0.1
+diffuse: 0.9
+
+Material bigSphere
+color: 0.9450980392, 0.768627451, 0.05882352941
+ambient: 0.1
+diffuse: 0.9
+
+Material diamond
+color: 1, 1, 1
+ambient: 0
+diffuse: 0
+specular: 0.05
+transmission: 0.95
+refractiveIndex: 2.5
+
+PointLight
+position: 0, 0.5, 0
+radius: 0.3
+intensity: 1
+
+PointLight
+position: -0.9, -0.4, 0
+radius: 0.3
+intensity: 0.6
+
+Plane
+material: leftWall
+point: -1.5, 0, 0
+normal: 1, 0, -0.25
+
+Plane
+material: rightWall
+point: 1.5, 0, 0
+normal: -1, 0, -0.25
+
+Plane
+material: backWall
+point: 0, 0, -4
+normal: 0, 0, 1
+
+Plane
+material: floor
+point: 0, -1, 0
+normal: 0, 1, 0
+
+Plane
+material: ceiling
+point: 0, 1, 0
+normal: 0, -1, -0.25
+
+Sphere
+origin: -0.5, -0.5, -1
+radius: 0.5
+material: bigSphere
+
+Disk
+origin: 0, 0, -1
+normal: 0.2, 1, 0.4
+radius: 0.7
+material: ceilingB
+
+Sphere
+origin: 0, 0.2, -1
+radius: 0.2
+material: a
+
+Material c
+color: 0.1725490196, 0.2431372549, 0.3137254902
+ambient: 0.2
+diffuse: 0.8
+
+Sphere
+origin: 0.2, -0.15, -0.5
+radius: 0.1
+material: c
+
+Sphere
+origin: 0.05, -0.005, -0.7
+radius: 0.12
+material: diamond
+
+Material b
+color: 0.1529411765, 0.6823529412, 0.3764705882
+ambient: 0.1
+specular: 0.1
+diffuse: 0.8
+
+Sphere
+origin: 0.4, -0.5, -0.3
+radius: 0.02
+material: b
+
+Sphere
+origin: 0.35, -0.3, -0.3
+radius: 0.03
+material: white
+
+Sphere
+origin: 0.4, 0.05, -0.85
+radius: 0.2
+material: floor
+
+Material d
+color: 0.5568627451, 0.2666666667, 0.6784313725
+ambient: 0.2
+diffuse: 0.8
+
+Sphere
+origin: -0.2, 0.053, -0.69
+radius: 0.12
+material: d
+
+Sphere
+origin: -0.35, 0.2, -0.95
+radius: 0.1
+material: checkersBW
+
+Disk
+origin: -0.5, 0.6, -1.1
+normal: -1, 1, -1
+radius: 0.4
+material: mirror
+
+Material glass
+color: 1, 1, 1
+ambient: 0.05
+diffuse: 0
+specular: 0.15
+transmission: 0.8
+refractiveIndex: 1.5
+
+Disk
+origin: 1.7, 1.2, -3
+normal: -1.7, -1, 1
+radius: 0.5
+material: glass
+
+Sphere
+origin: -0.3, -0.08, -0.4
+radius: 0.08
+material: mirror
+
+Plane
+point: 0, 0, 1.25
+normal: 0, 0, -1
+material: black
