@@ -1,3 +1,9 @@
+/**
+ * Responsibilities:
+ *   - Boots up sample.scene into a Renderer and Scene instance
+ *   - Creates a GLUT window with an orthographic projection to render the
+ *     image into
+ */
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
 #  include <OpenGL/glu.h>

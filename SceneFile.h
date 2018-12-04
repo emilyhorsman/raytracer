@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Configure a Renderer and Scene instance from a scene file. Fairly
+ *        messy parsing but it gets the job done
+ */
 #ifndef _SCENE_FILE_H_
 #define _SCENE_FILE_H_
 

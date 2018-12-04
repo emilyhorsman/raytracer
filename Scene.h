@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Store objects and lights in scene, get their intersections with a
+ *        ray.
+ */
 #ifndef _SCENE_H_
 #define _SCENE_H_
 

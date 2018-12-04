@@ -389,6 +389,10 @@ bool parseCamera(Camera &camera, std::istream &stream, std::string line, std::st
 }
 
 
+/**
+ * This takes a Renderer and Scene instance and populates them with the
+ * configuration, objects, and lights found in the given scene file.
+ */
 bool loadSceneFile(Renderer &renderer, Scene &scene, std::string file) {
     std::ifstream f(file);
     if (!f.is_open()) {

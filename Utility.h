@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Convenience methods and type definitions for time, random numbers,
+ *        and OpenGL.
+ */
 #ifndef _UTILITY_H_
 #define _UTILITY_H_
 #include <chrono>

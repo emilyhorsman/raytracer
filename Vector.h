@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Mathematical functions on vectors represented with `std::array`
+ *        instances.
+ */
 #ifndef _VECTOR_H_
 #define _VECTOR_H_
 

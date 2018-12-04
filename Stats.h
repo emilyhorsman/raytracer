@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @brief Report the time a render thread takes and the quanities of rays and
+ *        intersections.
+ */
 #ifndef _STATS_H_
 #define _STATS_H_
 

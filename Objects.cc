@@ -64,23 +64,16 @@ bool Sphere::intersect(
 }
 
 
-void Sphere::drawGL() {
-    glPushMatrix();
-    glTranslatef(REST(mOrigin));
-    glutSolidSphere(mRadius, 20, 20);
-    glPopMatrix();
-}
-
-
 Vec3f Sphere::getNormalDir(Vec3f intersection) {
     return normalize(subtract(intersection, mOrigin));
 }
 
 
+/**
+ * Perform some texture mapping so that we can use the CheckerboardMaterial
+ * without it being distorted.
+ */
 Vec3f Sphere::getColor(float x, float y, float z) {
-    // Perform some texture mapping so that we can use the CheckerboardMaterial
-    // without it being distorted.
-    //
     // Based on [9].
     float theta = atan2(-(z - mOrigin[2]), x - mOrigin[0]);
     float u = (theta + M_PI) / (2.0f * M_PI);
@@ -103,28 +96,6 @@ bool Plane::intersect(
     float &intersectionScalar
 ) {
     return rayPlaneIntersection(rayOrigin, rayDirection, mPoint, mNormal, intersectionScalar);
-}
-
-
-float Plane::computeY(float x, float z) {
-    float constantTerm = -dot(mPoint, mNormal);
-    float y = (
-        (-mNormal[0] * x - mNormal[2] * z - constantTerm) /
-        mNormal[1]
-    );
-    return y;
-}
-
-
-void Plane::drawGL() {
-    glBegin(GL_QUADS);
-    glNormal3fv(mNormal.begin());
-    // TODO: We have to write one of each of these depending on the normal.
-    glVertex3f(-5, computeY(-5, 5), 5);
-    glVertex3f(5, computeY(5, 5), 5);
-    glVertex3f(5, computeY(5, -5), -5);
-    glVertex3f(-5, computeY(-5, -5), -5);
-    glEnd();
 }
 
 
@@ -159,6 +130,3 @@ bool Disk::intersect(
     Vec3f difference = subtract(intersection, mOrigin);
     return sqrtf(dot(difference, difference)) < mRadius;
 }
-
-
-void Disk::drawGL() {}
