@@ -24,13 +24,13 @@ void Camera::computePrimaryRay(float pixelX, float pixelY, Vec3f &direction, Vec
     // There is an imaginary focal plane between the image plane and the
     // objects in the scene. We know one point on the plane: the point the
     // camera is looking at.
-    assert(rayPlaneIntersection(
+    rayPlaneIntersection(
         mPosition,
         ray,
         mLookAt,
         imagePlaneNormal,
         t
-    ));
+    );
     // Compute the point on the imaginary focal plane that this ray intersects.
     Vec3f focalPoint = add(
         mPosition,

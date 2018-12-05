@@ -404,7 +404,6 @@ Vec3f computeRefractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
         relativeIndexOfRefraction = 1.0f / refractionIndex;
         normal = multiply(normal, -1);
     }
-    assert(cosi >= 0);
 
     float base = (
         1 - (relativeIndexOfRefraction * relativeIndexOfRefraction) * (1 - cosi * cosi)

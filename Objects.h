@@ -5,6 +5,8 @@
 #ifndef _OBJECTS_H_
 #define _OBJECTS_H_
 
+#include <memory>
+
 #include "Material.h"
 #include "Vector.h"
 

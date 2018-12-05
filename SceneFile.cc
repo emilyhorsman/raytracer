@@ -2,6 +2,7 @@
  * This parsing code is fairly rudimentary and fairly unpleasant. It lets many
  * erroenous scene files off the hook.
  */
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
