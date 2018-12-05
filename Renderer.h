@@ -37,17 +37,23 @@ enum AntiAliasingMethod {
  */
 class Renderer {
     private:
+        /// Maintain a queue of render jobs to be performed.
         std::queue<std::pair<int, int>> mWorkQueue;
+        /// Prevent interference between threads on the work queue.
         std::mutex mQueueLock;
+        /// Track the number of rows completed by the render threads for the progress bar.
         int mCompletedRows;
+        /// The final image is ultimately just an array of color vectors.
         Vec3f *mImage;
 
     public:
         Scene &mScene;
         int mWidth;
         int mHeight;
+        /// Number of rendering iterations to run and average.
         int mNoiseReduction;
         int mMaxDepth;
+        /// Must be a square number.
         int mAntiAliasing;
         AntiAliasingMethod mAntiAliasingMethod;
         bool mEnableSoftShadows;

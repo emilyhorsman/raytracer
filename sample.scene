@@ -9,12 +9,6 @@ iterations: 1
 threads: 12
 outputFile: ./sample.ppm
 
-Camera
-fieldOfViewDegrees: 90
-eye: 0, 0, 0.25
-lookAt: 0.5, 0.8, -2
-apertureRadius: 0
-
 CheckerboardMaterial checkersBW
 color: 1, 1, 1
 odd: 0, 0, 0

@@ -45,13 +45,24 @@ Renderer::~Renderer() {
 }
 
 
+/**
+ * Pushes blocks of rows on to a queue and starts render threads which will pop
+ * off the queue and render independent rows.
+ */
 void Renderer::render() {
     mImage = new Vec3f[mHeight * mWidth];
+    // Compute properties shared by all primary ray computations in all threads.
     float aspectRatio = (float) mWidth / (float) mHeight;
     float fovRatio = tan(mScene.mCamera.mFieldOfViewRadians / 2.0f);
 
+    // Divide the rows of the image into blocks and place them in the work
+    // queue.
     mQueueLock.lock();
-    for (int i = WORK_BLOCK_SIZE - 1, j = 0; j <= mHeight; j = i + 1, i += WORK_BLOCK_SIZE) {
+    for (
+        int i = WORK_BLOCK_SIZE - 1, j = 0;
+        j <= mHeight;
+        j = i + 1, i += WORK_BLOCK_SIZE
+    ) {
         mWorkQueue.push(std::make_pair(j, std::min(mHeight - 1, i)));
     }
     mQueueLock.unlock();
@@ -63,7 +74,6 @@ void Renderer::render() {
 
         t->run(mImage, i);
     }
-
     for (auto t : threads) {
         t->join();
     }
@@ -84,7 +94,7 @@ void Renderer::gl() {
 /**
  * Each render thread gets a batch of WORK_BLOCK_SIZE rows to render at a time.
  * This function returns true if there is work remaining in the queue after
- * populating start and end if so.
+ * it populates `start` and `end` (if the queue was non-empty).
  */
 bool Renderer::getWork(int &start, int &end) {
     mQueueLock.lock();
@@ -107,6 +117,7 @@ bool Renderer::getWork(int &start, int &end) {
 }
 
 
+/// Just a simple progress bar using a carriage return to write over itself.
 void Renderer::printProgress() {
     float progress = (mCompletedRows / (float) mHeight) * 100;
     std::cout << std::right
@@ -194,7 +205,15 @@ Vec3f RenderThread::computePixelAverage(int x, int y) {
 }
 
 
+/**
+ * This is the heart of a RenderThread instance. It will keep popping jobs off
+ * the work queue until the queue is empty. I previously attempted to assign
+ * interlaced portions of the image to each thread in advance, instead of a
+ * having a shared queue. This often led to one thread lagging behind the
+ * others and thus wasting potential concurrency.
+ */
 void RenderThread::render(Vec3f *image, const int id) {
+    // Track the total time this thread spent rendering.
     TimePoint startTime = Clock::now();
     mStats.pixels = 0;
     mStats.id = id;
@@ -225,6 +244,10 @@ void RenderThread::computeAntiAliasingSample(int samples, int x, int y, float &x
 }
 
 
+/**
+ * Takes care of anti-aliasing and calls `trace` to start the actual ray
+ * tracing (finally!).
+ */
 Vec3f RenderThread::renderPixel(int x, int y) {
     Vec3f direction, origin;
     if (mRenderer->mAntiAliasing == 0) {
@@ -251,6 +274,24 @@ Vec3f RenderThread::renderPixel(int x, int y) {
 }
 
 
+/**
+ * Takes a ray origin and direction and computes the color it accumulates while
+ * bouncing around the image. This requires a `depth` argument to ensure that
+ * specular and transmission rays are not computed when we've reached
+ * `mMaxDepth`.
+ *
+ * If the ray does not intersect with any object then the background color is
+ * returned.
+ *
+ * Otherwise, the color of a pixel is determined by the material properties of
+ * the object this ray intersects. This is the sum of the following components,
+ * each scaled by a coefficient defined by the material.
+ *
+ *   - Ambient, independent of lighting and recursive calls
+ *   - Diffuse, dependent on lighting
+ *   - Specular, dependent on a recursive `trace` call for reflections
+ *   - Transmission, dependent on a recursive `trace` call for refraction
+ */
 Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
     std::shared_ptr<SceneObject> intersectionObject = NULL;
     float intersectionScalar;
@@ -266,15 +307,26 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
     }
     mStats.quantities[INTERSECTIONS]++;
 
+    // Ray-object intersection computations only tell us how far along the ray
+    // the intersection occurs at, since they just solve the parametric
+    // equation of the ray. We must compute the actual point of intersection
+    // and the normal of the object at that point.
     Vec3f intersection = add(origin, multiply(ray, intersectionScalar));
     Vec3f normal = intersectionObject->getNormalDir(intersection);
-    Vec3f color = multiply(
-        intersectionObject->getColor(REST(intersection)),
-        intersectionObject->mMaterial->ambient
-    );
-    float diffuse = intersectionObject->mMaterial->diffuse;
+    // The object is responsible for computing its color at a certain point on
+    // its surface.
+    Vec3f materialColor = intersectionObject->getColor(REST(intersection));
+    // The color will always start with its ambient component.
+    Vec3f color = multiply(materialColor, intersectionObject->mMaterial->ambient);
 
+    float diffuse = intersectionObject->mMaterial->diffuse;
     if (diffuse > 0) {
+        // Every point light in the scene contributes to the color contributed
+        // from this ray. A shadow ray is computed by the point light and used
+        // to see if the light visible from the object. There may be an object
+        // in between the intersection point and every light in the scene, in
+        // which case the point is in shadow and no diffuse component
+        // contributes to the final color.
         for (auto pointLight : mRenderer->mScene.mPointLights) {
             float distance;
             Vec3f shadowRay = pointLight->direction(
@@ -285,6 +337,12 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
             mStats.quantities[SHADOW]++;
 
             float k;
+            // Intersecting with an object that isn't 100% transparent or 100%
+            // opaque means that a fraction of this point light intensity
+            // contributes to the color. The intensity starts at 1 and each
+            // time an object is intersected along the ray's path to the light
+            // source, the intensity drops based on the intersection's
+            // transparency.
             float intensity = 1;
             for (auto testObj : mRenderer->mScene.mObjects) {
                 if (testObj == intersectionObject) {
@@ -298,16 +356,22 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
                 // ray).
                 if (testObj->intersect(intersection, shadowRay, k) && k >= 1e-4 && k < distance) {
                     intensity -= 1 - fmax(0, testObj->mMaterial->transmission);
+                    // We can stop testing objects once the intensity drops
+                    // below 0, since it can never increase.
                     if (intensity <= 1e-4) {
                         break;
                     }
                 }
             }
 
+            // Use the facing ratio, the shadow intensity computed, the diffuse
+            // coefficient of the material, and the facing ratio of the shadow
+            // ray and normal to compute the final diffuse contribution from
+            // this point light.
             color = add(
                 color,
                 multiply(
-                    intersectionObject->getColor(REST(intersection)),
+                    materialColor,
                     intensity * pointLight->mIntensity * diffuse * fmax(0, dot(shadowRay, normal))
                 )
             );
@@ -315,6 +379,7 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     bool isTotalInternalReflection = false;
+    // Refraction!
     if (intersectionObject->mMaterial->transmission > 0 && depth < mRenderer->mMaxDepth) {
         Vec3f transmissionDirection = computeRefractionDir(
             ray,
@@ -323,10 +388,6 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
             isTotalInternalReflection
         );
         if (!isTotalInternalReflection) {
-            // The surface normal points away from the sphere. We want the
-            // bias to be in the direction of the transmission. If the
-            // incoming ray is outside the sphere then the bias should be
-            // negating the normal.
             Vec3f transmissionColor = trace(
                 add(intersection, multiply(transmissionDirection, 1e-4)),
                 transmissionDirection,
@@ -341,6 +402,9 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
     }
 
     float intensity = intersectionObject->mMaterial->specular;
+    // If the refraction computation produced total internal reflection then
+    // no recursive call is made and its contribution coefficient should be
+    // added to reflection instead.
     if (isTotalInternalReflection) {
         intensity += intersectionObject->mMaterial->transmission;
     }
@@ -362,6 +426,10 @@ Vec3f RenderThread::trace(Vec3f origin, Vec3f ray, int depth) {
 }
 
 
+/**
+ * Determine whether a ray is coming from inside or outside an object based on
+ * its surface normal.
+ */
 bool isInside(Vec3f rayDirection, Vec3f intersectionNormal) {
     return dot(rayDirection, intersectionNormal) > 0;
 }
@@ -421,6 +489,7 @@ Vec3f computeRefractionDir(Vec3f ray, Vec3f normal, float refractionIndex, bool 
 
 
 void Renderer::printIntro(std::string file) {
+    // This is so gross and should be refactored.
     std::cout << "=== Render Info " << file << " ===" << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Target" << "OpenGL, " << mOutputFile << std::endl;
     std::cout << std::left << std::setw(20) << std::setfill(' ') << "Image Dimension" << mWidth << " x " << mHeight << std::endl;
