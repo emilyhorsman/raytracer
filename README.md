@@ -1,47 +1,18 @@
 # Raytracer
 
-## Recommended reading
+![A scene demoing many rendering features of this ray tracer, including refraction and soft shadows.](./Sample.png)
 
-- Doxygen output in `html/files.html` to see an overview of which sources files are responsible for various features.
-- `README.pdf` for an overview of the features, sample images, instructions on compiling, running, and scene files.
+More sample renderings available in [README.pdf](./README.pdf).
 
-## Spelunking this codebase
+## Features
 
-Q: Where do you handle the GLUT window? <br>
-A: `main.cc`
-
-Q: Where do you actually render an image into the GLUT window? <br>
-A: `Utility.cc`
-
-Q: Where do you render to a PPM image? <br>
-A: `ImageFile.cc`
-
-Q: Where does all the ray tracing begin? <br>
-A: `Renderer.cc`, particularly `Renderer::render` and `RenderThread::trace`
-
-Q: Where do you handle anti-aliasing? <br>
-A: `Renderer.cc`, particularly `RenderThread::renderPixel` and `RenderThread::computeAntiAliasingSample`
-
-Q: Where do you handle refraction? <br>
-A: `Renderer.cc`, particularly `RenderThread::trace` and `computeRefractionDir`
-
-Q: Where do you handle depth of field? <br>
-A: `Renderer.cc` and `Camera.cc`, particularly `RenderThread::computePrimaryRay` and `Camera::computePrimaryRay`
-
-Q: Where do you handle soft shadows? <br>
-A: `PointLight.cc`, particularly `PointLight::direction`
-
-Q: Where do you handle multi-threading? <br>
-A: `Renderer.cc`, particularly `Renderer::render`, `Renderer::getWork`, and `RenderThread::run`
-
-Q: Where do you parse scene files? <br>
-A: `SceneFile.cc`, particularly `loadSceneFile`
-
-Q: Where do you generate the checkerboard texture? <br>
-A: `Material.cc`, particularly `CheckerboardMaterial::getColor`
-
-Q: Where do you compute texture mapping for spheres? <br>
-A: `Objects.cc`, particularly `Sphere::getColor`
-
-Q: Where do you compute ray-object intersections? <br>
-A: `Objects.cc`, every subclass of `SceneObject` has an `intersect` function
+- CPU-based ray tracer
+- Scene files for configuring rendering and scene parameters, materials, lights, and objects
+- Support for planes, spheres, and disks
+- Color and checkered material with proper texture mapping for spheres
+- Materials specify coefficients for: ambient, diffuse, and specular light; transmission; index of refraction
+- Multi-threaded rendering with a configurable number of threads
+- Rudimentary refraction (no Fresnel effect)
+- Soft shadows achieved by 'jittering' point lights and averaging multiple renders
+- Anti-aliasing with both regular (uniform) and random sampling techniques
+- Adjustable depth-of field and camera field of view
